@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.Language.Lang }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ .Title }}</title>
+<meta name="description" content="{{ .Params.description }}">
+{{ range .Translations }}<link rel="alternate" hreflang="{{ .Site.Language.Lang }}" href="{{ .Permalink }}">{{ end }}
+{{ $css := resources.Get "css/main.css" | minify }}<style>{{ $css.Content | safeCSS }}</style>
+</head>
+<body>
+<header class="hero">
+  <nav>
+    <span class="brand">Ulf Seidl</span>
+    <span class="lang">
+      {{ if eq .Site.Language.Lang "de" }}<a href="/en/">EN</a>{{ else }}<a href="/">DE</a>{{ end }}
+    </span>
+  </nav>
+  <div class="hero-inner">
+    <p class="kicker">{{ .Params.hero_kicker }}</p>
+    <h1>{{ .Params.hero_title }}</h1>
+    <p class="sub">{{ .Params.hero_sub }}</p>
+    <div class="cta">
+      <a class="btn primary" href="tel:{{ .Site.Params.phone | urlize }}">{{ .Params.cta_call }}</a>
+      <a class="btn" href="https://wa.me/{{ .Site.Params.whatsapp }}">{{ .Params.cta_whatsapp }}</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="about">
+    <div class="portrait"><img src="/images/ulf-portrait.jpg" alt="Ulf Seidl" loading="lazy"></div>
+    <div>
+      <h2>{{ .Params.about_title }}</h2>
+      <p>{{ .Params.about_text }}</p>
+    </div>
+  </section>
+
+  <section class="offers">
+    <h2>{{ .Params.offers_title }}</h2>
+    <p class="note">{{ .Params.offers_note }}</p>
+    <div class="grid">
+      {{ range .Params.offers }}
+      <div class="card{{ if .featured }} featured{{ end }}">
+        <h3>{{ .name }}</h3>
+        <p class="duration">{{ .duration }}</p>
+        <p class="price">{{ .price }}</p>
+        <p>{{ .text }}</p>
+      </div>
+      {{ end }}
+    </div>
+  </section>
+
+  <section class="why">
+    <div class="photo"><img src="/images/ulf-action.jpg" alt="Skiunterricht in Flachau" loading="lazy"></div>
+    <div>
+      <h2>{{ .Params.why_title }}</h2>
+      <ul>{{ range .Params.why }}<li>{{ . }}</li>{{ end }}</ul>
+    </div>
+  </section>
+
+  <section class="contact" id="kontakt">
+    <h2>{{ .Params.contact_title }}</h2>
+    <p>{{ .Params.contact_text }}</p>
+    <div class="cta">
+      <a class="btn primary" href="tel:{{ .Site.Params.phone | urlize }}">{{ .Site.Params.phone }}</a>
+      <a class="btn" href="https://wa.me/{{ .Site.Params.whatsapp }}">WhatsApp</a>
+      <a class="btn" href="mailto:{{ .Site.Params.email }}">{{ .Site.Params.email }}</a>
+    </div>
+    <p class="addr">{{ .Site.Params.address }}</p>
+  </section>
+</main>
+
+<footer>
+  <span>© {{ now.Year }} Ulf Seidl · Flachau</span>
+  <span><a href="/impressum/">Impressum</a> · <a href="/datenschutz/">Datenschutz</a></span>
+</footer>
+</body>
+</html>

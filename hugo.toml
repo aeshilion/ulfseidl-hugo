@@ -1,0 +1,21 @@
+baseURL = "https://ulfseidl.at/"
+title = "Ulf Seidl — Skilehrer in Flachau"
+defaultContentLanguage = "de"
+defaultContentLanguageInSubdir = false
+enableRobotsTXT = true
+
+[languages]
+  [languages.de]
+    weight = 1
+    languageName = "Deutsch"
+    contentDir = "content/de"
+  [languages.en]
+    weight = 2
+    languageName = "English"
+    contentDir = "content/en"
+
+[params]
+  phone = "+43 664 XXXXXXX"
+  whatsapp = "43664XXXXXXX"
+  email = "ulf@ersteschischule.at"
+  address = "Stahlhammergasse 268, 5542 Flachau, Österreich"
