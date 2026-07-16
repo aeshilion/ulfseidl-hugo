@@ -2,7 +2,8 @@
 title: "Ulf Seidl — Ski Instructor in Flachau"
 description: "Private ski lessons in Flachau (Snow Space Salzburg). Personal, flexible, at your level — with experienced ski instructor Ulf Seidl."
 hero_kicker: "Private lessons in Flachau"
-hero_title: "Learn to ski with a pro. Personal. At your own pace."
+hero_title_light: "Learn to ski in the heart of"
+hero_title_accent: "Snow Space Salzburg"
 hero_sub: "Decades of experience, one instructor, undivided attention — in the heart of Snow Space Salzburg."
 cta_call: "Call now"
 cta_whatsapp: "Message on WhatsApp"
@@ -13,7 +14,8 @@ about_text: >
   the town's big ski schools — now I am deliberately returning to what I love
   most: teaching people to ski, one on one. No meeting point crowds, no group
   numbers. Just you, the snow and me.
-offers_title: "Lessons & prices"
+offers_title_light: "Lessons &"
+offers_title_accent: "prices"
 offers_note: "Season December to April · meeting point by arrangement, right on the slopes of Flachau"
 offers:
   - name: "Taster lesson"
@@ -33,7 +35,8 @@ offers:
     duration: "per person"
     price: "+ € 15"
     text: "Family or friends at a similar level? Up to 4 people welcome."
-why_title: "Why private with Ulf?"
+why_title_light: "Why private with"
+why_title_accent: "Ulf?"
 why:
   - "Undivided attention — one hour with me replaces days in a group course"
   - "From your first snowplough turn to carving down black runs"
@@ -41,5 +44,18 @@ why:
   - "I know Flachau's slopes like the back of my hand: best runs, no queues"
   - "English and German"
 contact_title: "Contact & booking"
+teasers:
+  - title: "Private lessons in Flachau"
+    text: "Your goals at the centre. Perfect for children and adults who want to make real progress fast."
+    cta: "See prices"
+    link: "#angebote"
+  - title: "Children & families"
+    text: "Patient, playful and safe — from the first touch of snow to the first red run. The whole family is welcome."
+    cta: "Learn more"
+    link: "#warum"
+  - title: "Book at short notice"
+    text: "One call is enough — slots often available even mid-season. Meeting point right on the slopes."
+    cta: "Call now"
+    link: "#kontakt"
 contact_text: "The fastest way to reach me is by phone or WhatsApp — even at short notice during the season."
 ---

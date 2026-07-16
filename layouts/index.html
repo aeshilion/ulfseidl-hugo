@@ -12,70 +12,88 @@
 </head>
 <body>
 <div class="topbar"><a href="tel:{{ .Site.Params.phone | urlize }}">⛷ {{ if eq .Site.Language.Lang "de" }}Jetzt Privatstunde sichern: {{ .Site.Params.phone }}{{ else }}Book your private lesson: {{ .Site.Params.phone }}{{ end }}</a></div>
-<nav class="mainnav"><div class="inner">
-  <span class="brand">Ulf Seidl · Flachau</span>
-  <div class="navlinks">
-    <a href="#angebote">{{ if eq .Site.Language.Lang "de" }}Preise{{ else }}Prices{{ end }}</a>
-    <a href="#kontakt">{{ if eq .Site.Language.Lang "de" }}Kontakt{{ else }}Contact{{ end }}</a>
-    <span class="lang">{{ if eq .Site.Language.Lang "de" }}<a href="/en/">EN</a>{{ else }}<a href="/">DE</a>{{ end }}</span>
-  </div>
-</div></nav>
 
-<div class="wrap">
-  <div class="panel">
-    <p class="accent" style="text-transform:uppercase;letter-spacing:2px;font-size:13px;margin-bottom:8px">{{ .Params.hero_kicker }}</p>
-    <h1><b>{{ .Params.hero_title }}</b></h1>
-    <div class="intro">
-      <div class="photo"><img src="/images/ulf-action.jpg" alt="Privater Skiunterricht in Flachau"></div>
-      <div>
-        <p class="sub">{{ .Params.hero_sub }}</p>
-        <p>{{ .Params.about_text }}</p>
-        <div class="cta">
-          <a class="btn primary" href="tel:{{ .Site.Params.phone | urlize }}">{{ .Params.cta_call }}</a>
-          <a class="btn" href="https://wa.me/{{ .Site.Params.whatsapp }}">{{ .Params.cta_whatsapp }}</a>
+<div class="sitewrap">
+  <div class="langbox">
+    {{ if eq .Site.Language.Lang "de" }}<a href="/en/">EN</a><span>DE</span>{{ else }}<span>EN</span><a href="/">DE</a>{{ end }}
+  </div>
+  <div class="logotile">
+    <div class="l1">Ulf Seidl</div>
+    <div class="l2">Flachau</div>
+  </div>
+  <nav class="mainnav"><div class="inner">
+    <div class="navlinks">
+      <a href="#angebote">{{ if eq .Site.Language.Lang "de" }}Preise{{ else }}Prices{{ end }}</a>
+      <a href="#warum">{{ if eq .Site.Language.Lang "de" }}Privatstunden{{ else }}Private lessons{{ end }}</a>
+      <a href="#kontakt">{{ if eq .Site.Language.Lang "de" }}Kontakt{{ else }}Contact{{ end }}</a>
+    </div>
+  </div></nav>
+
+  <div class="content">
+    <section class="introsec">
+      <h1>{{ .Params.hero_title_light }} <span class="accent">{{ .Params.hero_title_accent }}</span></h1>
+      <div class="intro">
+        <div class="photo"><img src="/images/ulf-action.jpg" alt="Privater Skiunterricht in Flachau"></div>
+        <div>
+          <p class="sub">{{ .Params.hero_sub }}</p>
+          <p>{{ .Params.about_text }}</p>
+          <div class="cta">
+            <a class="btn primary" href="tel:{{ .Site.Params.phone | urlize }}">{{ .Params.cta_call }}</a>
+            <a class="btn" href="https://wa.me/{{ .Site.Params.whatsapp }}">{{ .Params.cta_whatsapp }}</a>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
+    </section>
 
-  <div class="panel offers" id="angebote">
-    <h2><b>{{ .Params.offers_title }}</b></h2>
-    <p class="note">{{ .Params.offers_note }}</p>
-    <div class="grid">
-      {{ range .Params.offers }}
-      <div class="card{{ if .featured }} featured{{ end }}">
-        <h3>{{ .name }}</h3>
-        <p class="duration">{{ .duration }}</p>
-        <p class="price">{{ .price }}</p>
-        <p>{{ .text }}</p>
+    <section class="offers" id="angebote">
+      <h2>{{ .Params.offers_title_light }} <span class="accent">{{ .Params.offers_title_accent }}</span></h2>
+      <p class="note">{{ .Params.offers_note }}</p>
+      <div class="grid">
+        {{ range .Params.offers }}
+        <div class="card{{ if .featured }} featured{{ end }}">
+          <h3>{{ .name }}</h3>
+          <p class="duration">{{ .duration }}</p>
+          <p class="price">{{ .price }}</p>
+          <p>{{ .text }}</p>
+        </div>
+        {{ end }}
       </div>
-      {{ end }}
-    </div>
+    </section>
+
+    <section class="why" id="warum">
+      <div class="about">
+        <div class="portrait"><img src="/images/ulf-portrait.jpg" alt="Ulf Seidl"></div>
+        <div><h2>{{ .Params.why_title_light }} <span class="accent">{{ .Params.why_title_accent }}</span></h2></div>
+      </div>
+      <ul>{{ range .Params.why }}<li>{{ . }}</li>{{ end }}</ul>
+    </section>
+
+    <section class="contact" id="kontakt">
+      <h2>{{ .Params.contact_title }}</h2>
+      <p>{{ .Params.contact_text }}</p>
+      <div class="cta">
+        <a class="btn primary" href="tel:{{ .Site.Params.phone | urlize }}">{{ .Site.Params.phone }}</a>
+        <a class="btn" href="https://wa.me/{{ .Site.Params.whatsapp }}">WhatsApp</a>
+        <a class="btn" href="mailto:{{ .Site.Params.email }}">{{ .Site.Params.email }}</a>
+      </div>
+      <p class="addr">{{ .Site.Params.address }}</p>
+    </section>
   </div>
 
-  <div class="panel why">
-    <div class="about" style="margin-bottom:26px">
-      <div class="portrait"><img src="/images/ulf-portrait.jpg" alt="Ulf Seidl"></div>
-      <div><h2><b>{{ .Params.why_title }}</b></h2></div>
+  <div class="teaser">
+    {{ range .Params.teasers }}
+    <div>
+      <h3>{{ .title }}</h3>
+      <p>{{ .text }}</p>
+      <a class="btn" href="{{ .link }}">{{ .cta }}</a>
     </div>
-    <ul>{{ range .Params.why }}<li>{{ . }}</li>{{ end }}</ul>
+    {{ end }}
   </div>
 
-  <div class="panel contact" id="kontakt">
-    <h2><b>{{ .Params.contact_title }}</b></h2>
-    <p>{{ .Params.contact_text }}</p>
-    <div class="cta">
-      <a class="btn primary" href="tel:{{ .Site.Params.phone | urlize }}">{{ .Site.Params.phone }}</a>
-      <a class="btn" href="https://wa.me/{{ .Site.Params.whatsapp }}">WhatsApp</a>
-      <a class="btn" href="mailto:{{ .Site.Params.email }}">{{ .Site.Params.email }}</a>
-    </div>
-    <p class="addr">{{ .Site.Params.address }}</p>
-  </div>
+  <footer>
+    <span>© {{ now.Year }} Ulf Seidl · Flachau</span>
+    <span><a href="/impressum/">Impressum</a> · <a href="/datenschutz/">Datenschutz</a></span>
+  </footer>
 </div>
-
-<footer>
-  <span>© {{ now.Year }} Ulf Seidl · Flachau</span>
-  <span><a href="/impressum/">Impressum</a> · <a href="/datenschutz/">Datenschutz</a></span>
-</footer>
 </body>
 </html>
