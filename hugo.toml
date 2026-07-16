@@ -13,6 +13,10 @@ enableRobotsTXT = true
     weight = 2
     languageName = "English"
     contentDir = "content/en"
+  [languages.nl]
+    weight = 3
+    languageName = "Nederlands"
+    contentDir = "content/nl"
 
 [params]
   phone = "+43 664 5442222"
