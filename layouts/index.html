@@ -11,35 +11,35 @@
 {{ $css := resources.Get "css/main.css" | minify }}<style>{{ $css.Content | safeCSS }}</style>
 </head>
 <body>
-<header class="hero">
-  <nav>
-    <span class="brand">Ulf Seidl</span>
-    <span class="lang">
-      {{ if eq .Site.Language.Lang "de" }}<a href="/en/">EN</a>{{ else }}<a href="/">DE</a>{{ end }}
-    </span>
-  </nav>
-  <div class="hero-inner">
-    <p class="kicker">{{ .Params.hero_kicker }}</p>
-    <h1>{{ .Params.hero_title }}</h1>
-    <p class="sub">{{ .Params.hero_sub }}</p>
-    <div class="cta">
-      <a class="btn primary" href="tel:{{ .Site.Params.phone | urlize }}">{{ .Params.cta_call }}</a>
-      <a class="btn" href="https://wa.me/{{ .Site.Params.whatsapp }}">{{ .Params.cta_whatsapp }}</a>
+<div class="topbar"><a href="tel:{{ .Site.Params.phone | urlize }}">⛷ {{ if eq .Site.Language.Lang "de" }}Jetzt Privatstunde sichern: {{ .Site.Params.phone }}{{ else }}Book your private lesson: {{ .Site.Params.phone }}{{ end }}</a></div>
+<nav class="mainnav"><div class="inner">
+  <span class="brand">Ulf Seidl · Flachau</span>
+  <div class="navlinks">
+    <a href="#angebote">{{ if eq .Site.Language.Lang "de" }}Preise{{ else }}Prices{{ end }}</a>
+    <a href="#kontakt">{{ if eq .Site.Language.Lang "de" }}Kontakt{{ else }}Contact{{ end }}</a>
+    <span class="lang">{{ if eq .Site.Language.Lang "de" }}<a href="/en/">EN</a>{{ else }}<a href="/">DE</a>{{ end }}</span>
+  </div>
+</div></nav>
+
+<div class="wrap">
+  <div class="panel">
+    <p class="accent" style="text-transform:uppercase;letter-spacing:2px;font-size:13px;margin-bottom:8px">{{ .Params.hero_kicker }}</p>
+    <h1><b>{{ .Params.hero_title }}</b></h1>
+    <div class="intro">
+      <div class="photo"><img src="/images/ulf-action.jpg" alt="Privater Skiunterricht in Flachau"></div>
+      <div>
+        <p class="sub">{{ .Params.hero_sub }}</p>
+        <p>{{ .Params.about_text }}</p>
+        <div class="cta">
+          <a class="btn primary" href="tel:{{ .Site.Params.phone | urlize }}">{{ .Params.cta_call }}</a>
+          <a class="btn" href="https://wa.me/{{ .Site.Params.whatsapp }}">{{ .Params.cta_whatsapp }}</a>
+        </div>
+      </div>
     </div>
   </div>
-</header>
 
-<main>
-  <section class="about">
-    <div class="portrait"><img src="/images/ulf-portrait.jpg" alt="Ulf Seidl" loading="lazy"></div>
-    <div>
-      <h2>{{ .Params.about_title }}</h2>
-      <p>{{ .Params.about_text }}</p>
-    </div>
-  </section>
-
-  <section class="offers">
-    <h2>{{ .Params.offers_title }}</h2>
+  <div class="panel offers" id="angebote">
+    <h2><b>{{ .Params.offers_title }}</b></h2>
     <p class="note">{{ .Params.offers_note }}</p>
     <div class="grid">
       {{ range .Params.offers }}
@@ -51,18 +51,18 @@
       </div>
       {{ end }}
     </div>
-  </section>
+  </div>
 
-  <section class="why">
-    <div class="photo"><img src="/images/ulf-action.jpg" alt="Skiunterricht in Flachau" loading="lazy"></div>
-    <div>
-      <h2>{{ .Params.why_title }}</h2>
-      <ul>{{ range .Params.why }}<li>{{ . }}</li>{{ end }}</ul>
+  <div class="panel why">
+    <div class="about" style="margin-bottom:26px">
+      <div class="portrait"><img src="/images/ulf-portrait.jpg" alt="Ulf Seidl"></div>
+      <div><h2><b>{{ .Params.why_title }}</b></h2></div>
     </div>
-  </section>
+    <ul>{{ range .Params.why }}<li>{{ . }}</li>{{ end }}</ul>
+  </div>
 
-  <section class="contact" id="kontakt">
-    <h2>{{ .Params.contact_title }}</h2>
+  <div class="panel contact" id="kontakt">
+    <h2><b>{{ .Params.contact_title }}</b></h2>
     <p>{{ .Params.contact_text }}</p>
     <div class="cta">
       <a class="btn primary" href="tel:{{ .Site.Params.phone | urlize }}">{{ .Site.Params.phone }}</a>
@@ -70,8 +70,8 @@
       <a class="btn" href="mailto:{{ .Site.Params.email }}">{{ .Site.Params.email }}</a>
     </div>
     <p class="addr">{{ .Site.Params.address }}</p>
-  </section>
-</main>
+  </div>
+</div>
 
 <footer>
   <span>© {{ now.Year }} Ulf Seidl · Flachau</span>
