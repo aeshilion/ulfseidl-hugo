@@ -6,7 +6,7 @@ layout: legal
 
 **Ulf Seidl** — Skilehrer
 Stahlhammergasse 268, 5542 Flachau, Österreich
-Telefon: +43 664 XXXXXXX · E-Mail: ulf@ersteschischule.at
+Telefon: +43 664 5442222 · E-Mail: ulf@ersteschischule.at
 
 Gewerbeberechtigung: Skischulwesen/Skilehrer *(TODO: exakte Bezeichnung + Behörde)*
 UID: *(TODO, falls vorhanden)* · Mitglied der WKO Salzburg *(TODO prüfen)*

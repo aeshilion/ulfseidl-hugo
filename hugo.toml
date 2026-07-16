@@ -15,7 +15,7 @@ enableRobotsTXT = true
     contentDir = "content/en"
 
 [params]
-  phone = "+43 664 XXXXXXX"
-  whatsapp = "43664XXXXXXX"
+  phone = "+43 664 5442222"
+  whatsapp = "436645442222"
   email = "ulf@ersteschischule.at"
   address = "Stahlhammergasse 268, 5542 Flachau, Österreich"
