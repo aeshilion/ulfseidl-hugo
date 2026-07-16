@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css?family=Oxygen:300,400,700&display=swap" rel="stylesheet">
 <title>{{ .Title }}</title>
 <meta name="description" content="{{ .Params.description }}">
 {{ range .Translations }}<link rel="alternate" hreflang="{{ .Site.Language.Lang }}" href="{{ .Permalink }}">{{ end }}

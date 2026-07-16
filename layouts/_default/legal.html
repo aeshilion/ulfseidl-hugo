@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="{{ .Site.Language.Lang }}">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css?family=Oxygen:300,400,700&display=swap" rel="stylesheet">
 <title>{{ .Title }} — Ulf Seidl</title><meta name="robots" content="noindex">
 {{ $css := resources.Get "css/main.css" | minify }}<style>{{ $css.Content | safeCSS }}</style></head>
 <body><div class="legal"><h1>{{ .Title }}</h1>{{ .Content }}<a class="back" href="{{ .Site.Home.Permalink }}">← {{ if eq .Site.Language.Lang "de" }}Zurück zur Startseite{{ else }}Back to home{{ end }}</a></div></body></html>
