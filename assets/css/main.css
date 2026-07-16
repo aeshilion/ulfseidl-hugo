@@ -92,3 +92,8 @@ footer a{color:#aaa}
 .legal h2{font-size:20px;margin-top:26px;font-weight:700}
 .legal p{margin:10px 0}
 .legal .back{display:inline-block;margin-top:30px}
+
+.gallery .galgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:6px}
+.gallery figure{margin:0;background:#fff;border:1px solid #e0e0e0;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.gallery figure img{width:100%;height:210px;object-fit:cover;display:block}
+.gallery figcaption{padding:11px 14px;font-size:13.5px;color:#555;line-height:1.45}

@@ -1,8 +1,30 @@
 <!DOCTYPE html>
 <html lang="{{ .Site.Language.Lang }}">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css?family=Oxygen:300,400,700&display=swap" rel="stylesheet">
-<title>{{ .Title }} — Ulf Seidl</title><meta name="robots" content="noindex">
-{{ $css := resources.Get "css/main.css" | minify }}<style>{{ $css.Content | safeCSS }}</style></head>
-<body><div class="legal"><h1>{{ .Title }}</h1>{{ .Content }}<a class="back" href="{{ .Site.Home.Permalink }}">← {{ if eq .Site.Language.Lang "de" }}Zurück zur Startseite{{ else }}Back to home{{ end }}</a></div></body></html>
+<title>{{ .Title }} — Ulf Seidl</title>
+{{ $css := resources.Get "css/main.css" | minify }}<style>{{ $css.Content | safeCSS }}</style>
+</head>
+<body>
+<div class="topbar"><a href="tel:{{ .Site.Params.phone | urlize }}">⛷ {{ if eq .Site.Language.Lang "nl" }}Boek nu uw privéles: {{ else if eq .Site.Language.Lang "en" }}Book your private lesson: {{ else }}Jetzt Privatstunde sichern: {{ end }}{{ .Site.Params.phone }}</a></div>
+<div class="sitewrap">
+  <div class="logotile"><div class="l1">Ulf Seidl</div><div class="l2">Flachau</div></div>
+  <nav class="mainnav"><div class="inner"><div class="navlinks">
+    <a href="{{ .Site.Home.RelPermalink }}">{{ if eq .Site.Language.Lang "de" }}Startseite{{ else if eq .Site.Language.Lang "nl" }}Home{{ else }}Home{{ end }}</a>
+  </div></div></nav>
+  <div class="legal">
+    <h1>{{ .Title }}</h1>
+    {{ .Content }}
+    <a class="back btn" href="{{ .Site.Home.RelPermalink }}">← {{ if eq .Site.Language.Lang "de" }}Zurück zur Startseite{{ else if eq .Site.Language.Lang "nl" }}Terug naar de startpagina{{ else }}Back to home{{ end }}</a>
+  </div>
+  <footer>
+    <span>© {{ now.Year }} Ulf Seidl · Flachau</span>
+    <span>{{ .Site.Params.phone }} · {{ .Site.Params.email }}</span>
+  </footer>
+</div>
+</body>
+</html>

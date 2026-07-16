@@ -43,6 +43,15 @@ why:
   - "Kinderen, volwassenen, herintreders — elke leeftijd, elk niveau"
   - "De pistes van Flachau ken ik als mijn broekzak: de beste hellingen, geen wachttijden"
   - "Nederlands­talige gasten van harte welkom — les in het Engels of Duits"
+gallery_title_light: "Beelden uit"
+gallery_title_accent: "Flachau"
+gallery:
+  - img: "/images/gal-kids.jpg"
+    caption: "Geduldig met de kleinsten — vanaf de eerste bocht veilig op de sneeuw."
+  - img: "/images/gal-carve.jpg"
+    caption: "Zuiver carven op de piste — techniek die plezier geeft."
+  - img: "/images/gal-mogul.jpg"
+    caption: "Ook in het gelände en op de bultenpiste thuis."
 contact_title: "Contact & boeken"
 teasers:
   - title: "Privélessen in Flachau"

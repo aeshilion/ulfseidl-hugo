@@ -43,6 +43,15 @@ why:
   - "Kinder, Erwachsene, Wiedereinsteiger — jedes Alter, jedes Niveau"
   - "Die Pisten von Flachau kenne ich wie meine Westentasche: beste Hänge, keine Wartezeiten"
   - "Deutsch und Englisch"
+gallery_title_light: "Bilder aus"
+gallery_title_accent: "Flachau"
+gallery:
+  - img: "/images/gal-kids.jpg"
+    caption: "Geduldig mit den Kleinsten — vom ersten Schwung an sicher unterwegs."
+  - img: "/images/gal-carve.jpg"
+    caption: "Sauberes Carving auf der Piste — Technik, die Freude macht."
+  - img: "/images/gal-mogul.jpg"
+    caption: "Auch im Gelände und auf der Buckelpiste zuhause."
 contact_title: "Kontakt & Buchung"
 teasers:
   - title: "Privatstunden in Flachau"

@@ -70,6 +70,15 @@
       <ul>{{ range .Params.why }}<li>{{ . }}</li>{{ end }}</ul>
     </section>
 
+    <section class="gallery">
+      <h2>{{ .Params.gallery_title_light }} <span class="accent">{{ .Params.gallery_title_accent }}</span></h2>
+      <div class="galgrid">
+        {{ range .Params.gallery }}
+        <figure><img src="{{ .img }}" alt="{{ .caption }}" loading="lazy"><figcaption>{{ .caption }}</figcaption></figure>
+        {{ end }}
+      </div>
+    </section>
+
     <section class="contact" id="kontakt">
       <h2>{{ .Params.contact_title }}</h2>
       <p>{{ .Params.contact_text }}</p>

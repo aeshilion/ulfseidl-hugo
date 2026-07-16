@@ -43,6 +43,15 @@ why:
   - "Children, adults, returners — every age, every level"
   - "I know Flachau's slopes like the back of my hand: best runs, no queues"
   - "English and German"
+gallery_title_light: "Pictures from"
+gallery_title_accent: "Flachau"
+gallery:
+  - img: "/images/gal-kids.jpg"
+    caption: "Patient with the youngest — safe on the snow from the very first turn."
+  - img: "/images/gal-carve.jpg"
+    caption: "Clean carving on the piste — technique that brings joy."
+  - img: "/images/gal-mogul.jpg"
+    caption: "At home off-piste and on the moguls too."
 contact_title: "Contact & booking"
 teasers:
   - title: "Private lessons in Flachau"
