@@ -26,8 +26,18 @@ a{color:var(--rot)}
 .navlinks a{color:#fff;text-decoration:none;text-transform:uppercase;font-size:13.5px;letter-spacing:.5px;padding:17px 16px;font-weight:400}
 .navlinks a:hover{background:#000;color:#fff}
 
-.content{background:#fff;padding:40px 44px 10px;box-shadow:0 0 40px rgba(0,0,0,.35)}
-@media(max-width:640px){.content{padding:26px 20px 6px}.logotile{position:static;display:inline-block;margin:10px 0 0 16px}.mainnav{margin-top:10px}}
+.content{background:rgba(255,255,255,.85);padding:40px 44px 10px;box-shadow:0 0 40px rgba(0,0,0,.30)}
+@media(max-width:640px){
+  .content{padding:24px 18px 6px}
+  .logotile{position:static;display:inline-block;margin:16px 0 0 14px;padding:9px 16px}
+  .logotile .l1{font-size:18px}
+  .logotile .l2{font-size:10px;letter-spacing:3px}
+  .langbox{padding:7px 12px;font-size:12px}
+  .mainnav{margin-top:14px}
+  .navlinks{flex-wrap:wrap;justify-content:center}
+  .navlinks a{padding:12px 11px;font-size:12.5px}
+  .intro{gap:20px}
+}
 
 section{padding:34px 0 40px;border-bottom:1px solid var(--linie)}
 section:first-child{padding-top:6px}
@@ -50,7 +60,7 @@ p{margin-bottom:12px}
 
 .offers .note{color:var(--grau);margin-bottom:20px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:14px}
-.card{background:var(--hell);padding:20px;border-top:3px solid transparent}
+.card{background:rgba(255,255,255,.75);border:1px solid #e6e6e6;padding:20px;border-top:3px solid transparent}
 .card.featured{border-top-color:var(--rot);background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.13)}
 .card h3{font-size:17px;color:#222;font-weight:700}
 .duration{color:var(--grau);font-size:13.5px;margin:2px 0 8px}
@@ -65,7 +75,7 @@ p{margin-bottom:12px}
 .why li::before{content:"✓";position:absolute;left:0;color:var(--rot);font-weight:700;font-size:17px}
 @media(max-width:700px){.why ul{columns:1}}
 
-.teaser{background:rgba(255,255,255,.88);margin-top:0;padding:36px 44px;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:30px}
+.teaser{background:rgba(255,255,255,.75);margin-top:0;padding:36px 44px;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:30px}
 .teaser h3{font-weight:300;font-size:22px}
 .teaser p{font-size:14.5px;color:#444}
 @media(max-width:640px){.teaser{padding:26px 20px}}
@@ -77,7 +87,7 @@ p{margin-bottom:12px}
 footer{background:#1a1a1a;color:#aaa;padding:20px 24px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:13.5px}
 footer a{color:#aaa}
 
-.legal{background:#fff;padding:44px;box-shadow:0 0 40px rgba(0,0,0,.35);margin-top:44px}
+.legal{background:rgba(255,255,255,.90);padding:44px;box-shadow:0 0 40px rgba(0,0,0,.35);margin-top:44px}
 .legal h1{margin-bottom:18px}
 .legal h2{font-size:20px;margin-top:26px;font-weight:700}
 .legal p{margin:10px 0}
