@@ -8,6 +8,16 @@
 <title>{{ .Title }}</title>
 <meta name="description" content="{{ .Params.description }}">
 {{ range .Translations }}<link rel="alternate" hreflang="{{ .Site.Language.Lang }}" href="{{ .Permalink }}">{{ end }}
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="canonical" href="{{ .Permalink }}">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ .Title }}">
+<meta property="og:description" content="{{ .Params.description }}">
+<meta property="og:image" content="{{ .Site.BaseURL }}images/ulf-action.jpg">
+<meta property="og:url" content="{{ .Permalink }}">
+<meta name="twitter:card" content="summary_large_image">
 {{ $css := resources.Get "css/main.css" | minify }}<style>{{ $css.Content | safeCSS }}</style>
 </head>
 <body>
@@ -19,10 +29,10 @@
     {{ if eq .Site.Language.Lang "nl" }}<span>NL</span>{{ else }}<a href="/nl/">NL</a>{{ end }}
     {{ if eq .Site.Language.Lang "de" }}<span>DE</span>{{ else }}<a href="/">DE</a>{{ end }}
   </div>
-  <div class="logotile">
+  <a class="logotile" href="{{ .Site.Home.RelPermalink }}" aria-label="Startseite">
     <div class="l1">Ulf Seidl</div>
     <div class="l2">Flachau</div>
-  </div>
+  </a>
   <nav class="mainnav"><div class="inner">
     <div class="navlinks">
       <a href="#angebote">{{ if eq .Site.Language.Lang "de" }}Preise{{ else if eq .Site.Language.Lang "nl" }}Prijzen{{ else }}Prices{{ end }}</a>
