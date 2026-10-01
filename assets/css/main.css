@@ -65,7 +65,15 @@ p{margin-bottom:12px}
 .card h3{font-size:17px;color:#222;font-weight:700}
 .duration{color:var(--grau);font-size:13.5px;margin:2px 0 8px}
 .price{font-size:29px;font-weight:700;color:var(--rot);margin-bottom:8px}
-.card p:last-child{font-size:14px;color:#555;margin:0}
+.card{display:flex;flex-direction:column}
+.card>p:last-of-type{font-size:14px;color:#555;margin:0 0 16px}
+.karte-anfragen{align-self:flex-start;margin-top:auto;min-height:44px;line-height:26px}
+.karte-anfragen:focus-visible{outline:3px solid rgba(187,45,35,.45);outline-offset:2px}
+.card[draggable=true]{cursor:grab}
+.af-drop{border:2px dashed #bbb;color:var(--grau);font-size:13.5px;padding:8px 12px;text-align:center}
+.af-drop[hidden]{display:none}
+.af-drop-bereit{border-color:var(--rot);color:var(--rot)}
+.af-drop-ueber{background:#fff7f6}
 
 .about{display:grid;grid-template-columns:170px 1fr;gap:30px;align-items:center;margin-bottom:22px}
 .portrait img{border-radius:50%;aspect-ratio:1;object-fit:cover;border:3px solid var(--rot)}

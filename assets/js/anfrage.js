@@ -7,6 +7,7 @@
  *    Relay angenommen ist. Sonst: Meldung + zweiter Weg (Telefon/WhatsApp), Angaben bleiben stehen.
  * 2. Turnstile lädt erst bei der ersten Berührung des Formulars (api.js ist groß; Lighthouse).
  *    Einwilligung ist ein Schalter (role=switch); „Anfrage senden“ bleibt gesperrt, bis er an ist.
+ *    „Anfragen“ auf einer Angebotskarte wählt das Angebot im Formular vor (Ziehen auf #af-drop als Abkürzung).
  * 3. WebMCP über document.modelContext (Rückfall navigator.modelContext), Muster wie
  *    biz-automation eap-webmcp.js: eigene Eingabeprüfung (Chrome prüft enum/unbekannte Parameter
  *    nicht), jede Antwort mit ok, jeder Fehler mit recovery, AbortController auf pagehide.
@@ -67,7 +68,9 @@
       });
       return tsP;
     }
-    ['focusin', 'pointerdown', 'input'].forEach(function (ev) { f.addEventListener(ev, tsLaden, { once: true, passive: true }); });
+    // Turnstile erst, wenn der MENSCH ein Feld berührt — nicht beim Fokus, den „Anfragen“ auf einer Karte setzt.
+    var stillerFokus = false;
+    ['focusin', 'pointerdown', 'input'].forEach(function (ev) { f.addEventListener(ev, function () { if (!stillerFokus) { tsLaden(); } }, { passive: true }); });
     function tsFeld() { return f.querySelector('input[name="cf-turnstile-response"]'); }
     function tsToken() {
       if (!tsBox) { return Promise.resolve(); }
@@ -80,6 +83,46 @@
     }
 
     function el(n) { return f.elements[n]; }
+
+    // ---- Angebotskarten als Quelle der Anfrage: Klick auf „Anfragen“ (und Ziehen als Abkürzung)
+    var sektion = document.getElementById('anfrage');
+    var ruhig = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function waehleAngebot(id) {
+      var sel = el('angebot'), opt = sel.querySelector('option[data-id="' + id + '"]');
+      if (!opt) { return false; }
+      sel.value = opt.value;
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+      if (sektion && sektion.scrollIntoView) { sektion.scrollIntoView({ behavior: ruhig ? 'auto' : 'smooth', block: 'start' }); }
+      stillerFokus = true;
+      try { sel.focus({ preventScroll: true }); } catch (_) { sel.focus(); }
+      stillerFokus = false;
+      return true;
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('[data-anfragen]'), function (a) {
+      a.addEventListener('click', function (e) { if (waehleAngebot(a.getAttribute('data-anfragen'))) { e.preventDefault(); } });
+    });
+    var drop = document.getElementById('af-drop');
+    if (drop && 'draggable' in drop && window.matchMedia && window.matchMedia('(pointer: fine)').matches) {
+      drop.hidden = false;
+      Array.prototype.forEach.call(document.querySelectorAll('[data-anfragen]'), function (a) {
+        var karte = a.closest('[data-angebot]');
+        if (!karte) { return; }
+        karte.setAttribute('draggable', 'true');
+        karte.addEventListener('dragstart', function (e) {
+          e.dataTransfer.setData('text/plain', a.getAttribute('data-anfragen'));
+          e.dataTransfer.effectAllowed = 'copy';
+          drop.classList.add('af-drop-bereit');
+        });
+        karte.addEventListener('dragend', function () { drop.classList.remove('af-drop-bereit', 'af-drop-ueber'); });
+      });
+      drop.addEventListener('dragover', function (e) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; drop.classList.add('af-drop-ueber'); });
+      drop.addEventListener('dragleave', function () { drop.classList.remove('af-drop-ueber'); });
+      drop.addEventListener('drop', function (e) {
+        e.preventDefault();
+        drop.classList.remove('af-drop-bereit', 'af-drop-ueber');
+        waehleAngebot(e.dataTransfer.getData('text/plain'));
+      });
+    }
     function wert(n) { var x = el(n); return x ? String(x.value || '').trim() : ''; }
 
     // Fehler neben dem Feld

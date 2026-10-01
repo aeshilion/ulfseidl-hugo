@@ -62,6 +62,7 @@
     <section class="offers" id="angebote">
       <h2>{{ .Params.offers_title_light }} <span class="accent">{{ .Params.offers_title_accent }}</span></h2>
       {{- $L := site.Language.Lang }}
+      {{- $mitFormular := partial "mit-formular.html" . }}
       <p class="note">{{ index hugo.Data.ulf.saison.text $L }} · {{ index hugo.Data.ulf.treffpunkt.text $L }}</p>
       <div class="grid">
         {{ range hugo.Data.ulf.angebote }}
@@ -70,6 +71,9 @@
           <p class="duration">{{ index .dauer $L }}</p>
           <p class="price">{{ partial "preis.html" . }}</p>
           <p>{{ index .text $L }}</p>
+          {{- if and $mitFormular (not .zuschlag) }}
+          <a class="btn karte-anfragen" href="#anfrage" data-anfragen="{{ .id }}" aria-label="{{ i18n "k_anfragen_aria" (dict "name" (index .name $L)) }}">{{ i18n "k_anfragen" }}</a>
+          {{- end }}
         </div>
         {{ end }}
       </div>

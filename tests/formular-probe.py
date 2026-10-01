@@ -11,7 +11,9 @@ Baut die Seite zweimal (production) und misst am GEBAUTEN HTML:
   3. Datenschutzerklärung in allen drei Sprachen mit Abschnitt Anfrageformular + Turnstile + 30 Tage.
   4. Bedienung nach Alex' Kontaktfeld (integrations.at), statisch am HTML und in jsdom
      (tests/webmcp-lauf.cjs --bedienung, je Sprache): Einwilligung als Schalter (checkbox role=switch),
-     „Anfrage senden“ gesperrt bis zur Einwilligung, mit Hinweis.
+     „Anfrage senden“ gesperrt bis zur Einwilligung, mit Hinweis; „Anfragen“ auf jeder buchbaren
+     Angebotskarte (Link auf #anfrage, Name enthält den sichtbaren Text) wählt das Angebot vor und
+     fokussiert die Auswahl; Ablagefläche zum Ziehen nur als Abkürzung (aria-hidden).
 
   python3 tests/formular-probe.py              # muss grün werden
   python3 tests/formular-probe.py --selbsttest # baut Fehler ins HTML ein, MUSS rot werden
@@ -24,6 +26,7 @@ REPO = pathlib.Path(__file__).resolve().parent.parent
 THEMEN = ["Schnupperstunde", "Halbtag privat", "Ganztag privat", "Noch offen"]
 SPRACHEN = {"de": "", "en": "en/", "nl": "nl/"}
 fehler = []
+verfehlt = []   # Selbsttest: Mutationen der Bedienung, die NICHT rot wurden
 
 
 def bauen(ziel, endpoint=None, ohne_turnstile=False):
@@ -63,7 +66,9 @@ def html_pruefen(html, sprache, mit_formular):
     pruef(len(karten) == 4, f"{sprache}: {len(karten)} Angebotskarten mit data-angebot, erwartet 4")
     pruef(all(re.fullmatch(r"\d+", e.get("data-preis-eur") or "") for e in karten), f"{sprache}: data-preis-eur fehlt/keine Zahl")
     anfrage = [f for f in b.forms if f.get("id") == "anfrage-form"]
+    knoepfe = [e for e in b.el if e.get("data-anfragen")]
     if not mit_formular:
+        pruef(not knoepfe, f"{sprache}: „Anfragen“-Knöpfe ohne Formular")
         pruef(not anfrage, f"{sprache}: Formular ohne Endpoint gebaut")
         pruef('href=#anfrage' not in html and 'href="#anfrage"' not in html, f"{sprache}: Link auf #anfrage ohne Formular")
         return
@@ -111,6 +116,13 @@ def bedienung_statisch(b, html, sprache):
     sub = [e for e in b.el if e["_tag"] == "button" and e.get("type") == "submit"]
     pruef(sub and "disabled" not in sub[0], f"{sprache}: „Anfrage senden“ schon im HTML gesperrt (ohne Skript nicht bedienbar)")
     pruef(sub and "af-senden-hinweis" in (sub[0].get("aria-describedby") or ""), f"{sprache}: Sperr-Hinweis nicht per aria-describedby am Knopf")
+    t = i18n(sprache)
+    kn = re.findall(r'<a class="btn karte-anfragen" href=#anfrage data-anfragen=(\w+) aria-label="([^"]+)">([^<]+)</a>', html)
+    pruef([k[0] for k in kn] == ["schnupperstunde", "halbtag_privat", "ganztag_privat"], f"{sprache}: „Anfragen“-Knöpfe {[k[0] for k in kn]}")
+    for _, aria, sichtbar in kn:
+        pruef(sichtbar == t["k_anfragen"] and sichtbar.lower() in aria.lower(), f"{sprache}: Knopf-Name {aria!r} enthält den sichtbaren Text {sichtbar!r} nicht (WCAG 2.5.3)")
+    drop = [e for e in b.el if e.get("id") == "af-drop"]
+    pruef(drop and drop[0].get("aria-hidden") == "true" and "hidden" in drop[0], f"{sprache}: Ablagefläche nicht aria-hidden/ohne Skript versteckt")
 
 
 def jsdom_pfad():
@@ -137,6 +149,9 @@ def bedienung_laufzeit(wurzel, sprache, js=None):
     pruef(b.get("knopf_anfangs_gesperrt") and b.get("sperrhinweis_anfangs_sichtbar"), f"{sprache}: „Anfrage senden“ ohne Einwilligung nicht gesperrt/ohne Hinweis")
     pruef(b.get("knopf_frei_nach_einwilligung") and b.get("sperrhinweis_danach_weg"), f"{sprache}: Knopf nach Einwilligung nicht frei")
     pruef(b.get("knopf_wieder_gesperrt"), f"{sprache}: Knopf nach Ausschalten nicht wieder gesperrt")
+    pruef(b.get("karten_knoepfe") == ["schnupperstunde", "halbtag_privat", "ganztag_privat"], f"{sprache}: Karten-Knöpfe {b.get('karten_knoepfe')}")
+    pruef(b.get("karte_waehlt") == "Halbtag privat" and b.get("karte_fokus") == "af-angebot" and b.get("karte_standard_verhindert"),
+          f"{sprache}: „Anfragen“ wählt nicht vor/fokussiert nicht ({b.get('karte_waehlt')}, {b.get('karte_fokus')})")
     pruef(not b.get("konsole"), f"{sprache}: Konsolenfehler {b.get('konsole')}")
 
 
@@ -167,7 +182,13 @@ def lauf(selbsttest=False):
                 alt = "knopf.disabled = sendet || !consent.checked;"
                 assert alt in q, "Selbsttest-Stelle in anfrage.js fehlt"
                 k = pathlib.Path(t, "kaputt.js"); k.write_text(q.replace(alt, "knopf.disabled = sendet;", 1))
-                bedienung_laufzeit(js, s, js=k)
+                vorher = len(fehler); bedienung_laufzeit(js, s, js=k)
+                if len(fehler) == vorher: verfehlt.append(f"{s}: Knopf nie gesperrt")
+                alt2 = "a.addEventListener('click', function (e) { if (waehleAngebot("
+                assert alt2 in q, "Selbsttest-Stelle 2 in anfrage.js fehlt"
+                k.write_text(q.replace(alt2, "a.addEventListener('x-aus', function (e) { if (waehleAngebot(", 1))
+                vorher = len(fehler); bedienung_laufzeit(js, s, js=k)
+                if len(fehler) == vorher: verfehlt.append(f"{s}: Karten-Knopf ohne Wirkung")
             else:
                 bedienung_laufzeit(js, s)
 
@@ -177,9 +198,11 @@ if __name__ == "__main__":
     lauf(selbst)
     fehler = [x for x in fehler if x]
     if selbst:
-        if len(fehler) >= 3 * 3 + 3:
+        if verfehlt:
+            print(f"✕ Selbsttest: Bedienungs-Mutationen nicht erkannt: {verfehlt}"); sys.exit(1)
+        if len(fehler) >= 3 * 3 + 3 + 3:
             print(f"✓ Selbsttest: {len(fehler)} eingebaute Fehler erkannt (Probe misst)"); sys.exit(0)
         print(f"✕ Selbsttest: nur {len(fehler)} Fehler erkannt — die Probe misst nicht"); print("\n".join(fehler)); sys.exit(1)
     if fehler:
         print("✕ Formular-Probe ROT:"); print("\n".join("  - " + x for x in fehler)); sys.exit(1)
-    print("✓ Formular-Probe grün: DE/EN/NL — ohne Endpoint kein Formular; mit Endpoint Felder, Labels, Fehlerzeilen, POST, Honigtopf außen, Themenliste, Turnstile erst bei Berührung, Datenschutz, Bedienung (Schalter + Sperre) in jsdom")
+    print("✓ Formular-Probe grün: DE/EN/NL — ohne Endpoint kein Formular; mit Endpoint Felder, Labels, Fehlerzeilen, POST, Honigtopf außen, Themenliste, Turnstile erst bei Berührung, Datenschutz, Bedienung (Schalter + Sperre, Karten-Knopf) in jsdom")
