@@ -62,9 +62,10 @@
     <div class="af-feld">
       <label for="af-personen">{{ i18n "f_personen" }}</label>
       <select id="af-personen" name="personen" required aria-describedby="af-personen-hinweis af-personen-fehler">
-        <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+        {{- range seq hugo.Data.ulf.personen_max }}<option value="{{ . }}">{{ . }}</option>{{ end }}
       </select>
-      <p class="af-hinweis" id="af-personen-hinweis">{{ i18n "f_personen_hinweis" }}</p>
+      {{- $zuschlag := index (where hugo.Data.ulf.angebote "zuschlag" true) 0 }}
+      <p class="af-hinweis" id="af-personen-hinweis">{{ i18n "f_personen_hinweis" (dict "preis" $zuschlag.preis_eur "max" hugo.Data.ulf.personen_max) }}</p>
       <p class="af-fehler" id="af-personen-fehler" hidden></p>
     </div>
     <div class="af-feld">
