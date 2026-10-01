@@ -113,7 +113,7 @@
 
   <footer>
     <span>© {{ now.Year }} Ulf Seidl · Flachau</span>
-    {{ if eq .Site.Language.Lang "nl" }}<span><a href="/nl/impressum/">Colofon</a> · <a href="/nl/datenschutz/">Privacy</a></span>{{ else }}<span><a href="/impressum/">Impressum</a> · <a href="/datenschutz/">Datenschutz</a></span>{{ end }}
+    <span><a href="{{ "impressum/" | relLangURL }}">{{ if eq .Site.Language.Lang "nl" }}Colofon{{ else if eq .Site.Language.Lang "en" }}Imprint{{ else }}Impressum{{ end }}</a> · <a href="{{ "datenschutz/" | relLangURL }}">{{ if eq .Site.Language.Lang "de" }}Datenschutz{{ else }}Privacy{{ end }}</a></span>
   </footer>
 </div>
 </body>
