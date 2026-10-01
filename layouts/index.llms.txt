@@ -6,7 +6,7 @@
 
 > {{ $K.anbieter.beschreibung }} {{ $K.angebote.hinweis }}.
 
-Website: {{ $web }} (Deutsch, Englisch, Niederländisch). Maschinenlesbarer Katalog: {{ $web }}webmcp.json
+Website: {{ $web }} (DE, EN, NL). Maschinenlesbarer Katalog: {{ $web }}webmcp.json
 
 ## Angebote und Preise ({{ $K.angebote.waehrung }})
 {{ range $K.angebote.angebote }}
@@ -66,7 +66,7 @@ Bis {{ $K.angebote.personen_max }} Personen; jede weitere Person auf ähnlichem 
 
 ## Für KI-Agenten (WebMCP)
 
-Die Startseite meldet diese Werkzeuge über document.modelContext an (Antworten auf Deutsch):
+Werkzeuge der Startseite über document.modelContext (Antworten auf Deutsch):
 {{ range $k.werkzeuge }}
 - `{{ .name }}` – {{ .title }}{{ if not .annotations.readOnlyHint }} (füllt nur das Formular aus; senden muss der Mensch){{ end }}
 {{- end }}

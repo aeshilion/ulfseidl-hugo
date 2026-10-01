@@ -235,9 +235,14 @@ def statisch(b, daten, fehler):
             for pfad, text in aussagen(ld, LD_FREI):
                 fremd = sorted({x for x in woerter(text) if x not in w})
                 pruef(not fremd, f"{s_}: JSON-LD-Aussage ohne Beleg ({pfad}): {fremd}")
-    vorspann = " ".join(z[1:] for z in L.splitlines() if z.startswith("> "))
-    fremd = sorted({x for x in woerter(vorspann) if x not in w})
-    pruef(not fremd, f"llms.txt-Vorspann ohne Beleg: {fremd}")
+    # Werkzeug-Texte, webmcp.json-Kopf und GANZE llms.txt: Wörter der Seite + Struktur + begründete Liste
+    erlaubt = w | struktur_woerter(daten, wj.get("webmcp", {}).get("werkzeuge", [])) | ERLAUBT
+    for quelle, text in werkzeug_texte(wj):
+        fremd = sorted({x for x in woerter(text) if x not in erlaubt})
+        pruef(not fremd, f"Aussage ohne Beleg ({quelle}): {fremd}")
+    for i, zeile in enumerate(L.splitlines(), 1):
+        fremd = sorted({x for x in woerter(zeile) if x not in erlaubt})
+        pruef(not fremd, f"Aussage ohne Beleg (llms.txt Zeile {i}): {fremd} in {zeile[:100]!r}")
 
 
 # ── Aussagen und Belege ───────────────────────────────────────────────────────────────────────
@@ -259,13 +264,99 @@ def seitentext(h):
     return norm_ws(text_aus_html(h) + " " + " ".join(htmlmod.unescape(x) for x in extra))
 
 
+def falten(x):
+    """Klein und ASCII wie die Werkzeug-Texte (ä→ae …), damit Seite und Beschreibung vergleichbar sind."""
+    x = x.lower()
+    for a, b_ in (("ä", "ae"), ("ö", "oe"), ("ü", "ue"), ("ß", "ss")):
+        x = x.replace(a, b_)
+    return x
+
+
 def woerter(text):
-    return {x.lower() for x in re.findall(r"[^\W\d_]{4,}", text)}
+    text = re.sub(r"https?://\S+|`[^`]*`", " ", text)                  # Adressen und `werkzeug_namen` sind keine Wörter
+    return set(re.findall(r"[^\W\d_]{4,}", falten(text)))            # erst falten: „für“ → „fuer“
 
 
 def woerter_der_seite(b):
-    t = " ".join(seitentext(b[k]) for k in b if k.startswith("home_")) + " " + seitentext(b["datenschutz"]) + " " + seitentext(b["impressum"])
+    # Impressum: Angaben mit „TODO“ (z. B. „Mitglied der WKO Salzburg (TODO prüfen)“) sind unbestätigt — kein Beleg
+    imp = "\n".join(z for z in b["impressum"].splitlines() if "TODO" not in z)   # ganze Zeile weg (Markdown-Zeile = Angabe)
+    t = " ".join(seitentext(b[k]) for k in b if k.startswith("home_")) + " " + seitentext(b["datenschutz"]) + " " + seitentext(imp)
+    # Platzhalter der Formularfelder sind sichtbarer Seitentext (z. B. „14.–16. Februar, vormittags“)
+    t += " " + " ".join(htmlmod.unescape(x) for k in b if k.startswith("home_") for x in re.findall(r'placeholder="([^"]*)"', b[k]))
     return woerter(t)
+
+
+# ── Erlaubte Wörter für Werkzeug-Texte, webmcp.json-Kopf und llms.txt ────────────────────────────
+# Diese Texte beschreiben WERKZEUGE, nicht Ulf. Sie dürfen deshalb (1) Wörter der Seite, (2) Wörter, die
+# aus der Struktur selbst kommen (Werkzeug- und Parameternamen, Feldnamen in data/ulf.yaml, offene Themen,
+# FAQ-Fragen — Fragen und Lücken sind keine Aussagen) und (3) die Wörter dieser Liste enthalten. Jedes
+# Wort hier ist begründet; ein Wort, das eine Tatsache über Ulf tragen kann (Mitglied, Verband, bucht,
+# verbindlich, Storno-Fristen, Zertifikate …), gehört NIE hierher — dann den Text ändern.
+ERLAUBT = {
+    # Funktionswörter: Grammatik, tragen allein keine Tatsache
+    "alle", "alles", "damit", "dazu", "denen", "dieses", "einen", "eigenen", "immer", "jeder", "kann", "muss",
+    "nichts", "selbst", "sind", "sonst", "unter", "vorher", "welcher", "ausserdem", "anhand", "gibt", "laut",
+    "sagt", "steht", "stehen", "genau", "passt", "kurze", "leere", "einzelnes", "naechsten", "keinen",
+    "echten", "mehrere", "sowie",
+    # Was ein Werkzeug tut und zurückgibt (Alex' Maßstab: „sagt, was zurückkommt“)
+    "liefert", "listet", "auflisten", "lesen", "werkzeug", "werkzeuge", "werkzeugs", "eintrag", "eintraege",
+    "liste", "treffer", "titel", "bereich", "detail", "ergebnis", "kurzbeschreibung", "beschreibung", "zahl",
+    "monatszahlen", "monat", "satz", "saetze", "wort", "worten", "wortfolge", "woertlich", "woertliche",
+    "kurzfassung", "kurzform", "punkten", "massgeblich", "vollstaendige", "vollstaendigen", "durchsucht",
+    "suchen", "suche", "passende", "antwort", "antworten", "frage", "fragen", "haeufige", "haeufigen",
+    "seiten", "sprache", "kalender", "angegeben", "belegt", "selbstauskunft", "themen", "regeln", "bedingungen",
+    "gueltiger", "unbekannter", "preisliste", "waehrung", "hoechstzahl", "euro", "dauer", "aufpreis",
+    "weiterer", "preis", "katalog", "maschinenlesbarer", "erfragen", "annehmen", "erfinden", "holen",
+    # Formular-Übergabe an den Menschen (privatstunde_anfragen): Felder, Prüfregeln, Ablauf des Absendens
+    "absendens", "abgeschickt", "gesendet", "angekommen", "drueckt", "fuellt", "ausfuellt", "bereitet",
+    "setzen", "zugestimmt", "verarbeitung", "anfragenden", "nachname", "nummer", "ziffern", "leerzeichen",
+    "personenzahl", "gewuenschtes", "kostet", "halber", "anfrageformulars", "kontaktwege", "mensch",
+    # Schnittstelle und Formate (WebMCP, JSON, Rückgabefelder)
+    "webmcp", "modelcontext", "document", "navigator", "registertool", "rueckfall", "json", "false", "true",
+    "error", "recovery", "agenten", "faqs", "nextsteps", "pruef",
+    # Rubriken von Alex' Wissenskatalog / Rechtsseiten (Überschriften, keine Aussage)
+    "fachkunde", "qualifikation", "qualifikationen", "zielgruppen", "unterrichtssprachen", "taetigkeit",
+    "anbieterangaben", "speicherdauer", "auswertung", "betroffenen", "verantwortlichen", "erklaerung",
+    "adressen", "gebiet", "rechtlichen", "seidls",
+}
+
+
+def struktur_woerter(daten, werkzeuge):
+    """Wörter aus der Struktur: Werkzeug-/Parameternamen, Feldnamen in data/ulf.yaml, offene Themen, FAQ-Fragen."""
+    w = set()
+    for t in werkzeuge:
+        w |= {falten(x) for x in t["name"].split("_")}
+        for k in (t.get("inputSchema") or {}).get("properties", {}):
+            w |= {falten(x) for x in k.split("_")}
+
+    def schluessel(v):
+        if isinstance(v, dict):
+            for k, x in v.items():
+                w.update(falten(y) for y in k.split("_"))
+                schluessel(x)
+        elif isinstance(v, list):
+            for x in v:
+                schluessel(x)
+    schluessel(daten)
+    for o in daten.get("offen_bei_ulf", []):
+        w |= woerter(o["thema"])
+    for f in daten.get("faqs", []) + daten.get("kundenfragen", []):
+        w |= woerter(f["frage"])
+    return w
+
+
+def werkzeug_texte(wj):
+    """(quelle, text) aus /webmcp.json außer dem Katalog: Kopf, Titel, Beschreibungen, Parameter-Beschreibungen."""
+    for k in ("name",):
+        yield f"webmcp.json {k}", wj.get(k, "")
+    for k, v in (wj.get("webmcp") or {}).items():
+        if isinstance(v, str):
+            yield f"webmcp.json webmcp.{k}", v
+    for t in (wj.get("webmcp") or {}).get("werkzeuge", []):
+        yield f"{t['name']}.title", t.get("title", "")
+        yield f"{t['name']}.description", t.get("description", "")
+        for k, p in (t.get("inputSchema") or {}).get("properties", {}).items():
+            yield f"{t['name']}.{k}", p.get("description", "")
 
 
 def aussagen(v, frei=FREI, pfad=""):
@@ -384,6 +475,13 @@ def mutationen(b):
     def katalog(neu):
         c = dict(b); c["home_de"] = b["home_de"].replace(roh, "<script type=application/json id=ulf-katalog>" + json.dumps(neu) + "</script>"); return c
     wj = json.loads(b["webmcp"]); wj["webmcp"]["werkzeuge"].pop(3)
+    # Repro der Abnahme: dieselbe erfundene Aussage in data/webmcp.yaml landet im Katalog UND in /webmcp.json
+    satz = " Ulf ist Mitglied im Salzburger Berufsskilehrerverband und bucht verbindlich."
+    k2 = json.loads(json.dumps(k)); k2["werkzeuge"][0]["description"] += satz
+    wj2 = json.loads(b["webmcp"]); wj2["webmcp"]["werkzeuge"][0]["description"] += satz
+    werkzeug_erfunden = dict(katalog(k2), webmcp=json.dumps(wj2))
+    wj3 = json.loads(b["webmcp"]); wj3["webmcp"]["anfrage"] += " Die Buchung ist sofort verbindlich."
+    kopf_erfunden = dict(b, webmcp=json.dumps(wj3))
     ohne_beleg = json.loads(json.dumps(k)); ohne_beleg["katalog"]["kontakt"]["hinweis"] += " Ueber die Website wird nichts verbindlich gebucht."
     return {
         "Kartenpreis weicht ab": ersetze("home_de", "<p class=price>€ 195</p>", "<p class=price>€ 190</p>"),
@@ -399,6 +497,9 @@ def mutationen(b):
         "JSON-LD behauptet founder": ersetze("home_de", '"@type":"SportsActivityLocation"', '"@type":"SportsActivityLocation","founder":{"@type":"Person","name":"Ulf Seidl"}'),
         "JSON-LD-Aussage ohne Beleg": ersetze("home_en", '"@type":"SportsActivityLocation"', '"@type":"SportsActivityLocation","slogan":"Best ski school in Austria"'),
         "llms.txt-Vorspann ohne Beleg": ersetze("llms", "\n> ", "\n> Über die Website wird nichts verbindlich gebucht. "),
+        "Repro: erfundene Aussage in der list_angebote-Beschreibung": werkzeug_erfunden,
+        "Repro: erfundene Aussage im llms.txt-Rumpf": ersetze("llms", "## Ablauf\n", "## Ablauf\n\n- Ulf ist Mitglied im Salzburger Berufsskilehrerverband und bucht verbindlich.\n"),
+        "erfundene Aussage im webmcp.json-Kopf (anfrage)": kopf_erfunden,
     }
 
 
@@ -442,6 +543,8 @@ def main():
         verfehlt = []
         for name, kopie in mutationen(b).items():
             f = []; statisch(kopie, daten, f)
+            if name.startswith("Repro") or "webmcp.json-Kopf" in name:
+                f = [x for x in f if "ohne Beleg" in x]           # nur zählen, wenn die Belegprüfung selbst anschlägt
             print(f"  {'✓' if f else '✕'} {name}: {len(f)} Fehler erkannt")
             if not f: verfehlt.append(name)
         f = []; origin_trial(b_ot, b_ot, token, f)
