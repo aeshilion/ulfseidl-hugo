@@ -60,14 +60,15 @@
 
     <section class="offers" id="angebote">
       <h2>{{ .Params.offers_title_light }} <span class="accent">{{ .Params.offers_title_accent }}</span></h2>
-      <p class="note">{{ .Params.offers_note }}</p>
+      {{- $L := site.Language.Lang }}
+      <p class="note">{{ index site.Data.ulf.saison.text $L }} · {{ index site.Data.ulf.treffpunkt.text $L }}</p>
       <div class="grid">
-        {{ range .Params.offers }}
+        {{ range site.Data.ulf.angebote }}
         <div class="card{{ if .featured }} featured{{ end }}" data-angebot="{{ .id }}" data-preis-eur="{{ .preis_eur }}"{{ if .zuschlag }} data-zuschlag{{ end }}>
-          <h3>{{ .name }}</h3>
-          <p class="duration">{{ .duration }}</p>
-          <p class="price">{{ .price }}</p>
-          <p>{{ .text }}</p>
+          <h3>{{ index .name $L }}</h3>
+          <p class="duration">{{ index .dauer $L }}</p>
+          <p class="price">{{ partial "preis.html" . }}</p>
+          <p>{{ index .text $L }}</p>
         </div>
         {{ end }}
       </div>
@@ -99,7 +100,7 @@
         <a class="btn" href="mailto:{{ .Site.Params.email }}">{{ .Site.Params.email }}</a>
         {{ if and site.Params.anfrageEndpoint (or site.Params.turnstileSitekey site.Params.anfrageOhneTurnstile) }}<a class="btn" href="#anfrage">{{ i18n "anfrage_cta" }}</a>{{ end }}
       </div>
-      <p class="addr">{{ .Site.Params.address }}</p>
+      {{ with site.Data.ulf.anbieter.adresse }}<p class="addr">{{ .strasse }}, {{ .plz }} {{ .ort }}, {{ .land }}</p>{{ end }}
     </section>
 
     {{ partial "anfrage-formular.html" . }}

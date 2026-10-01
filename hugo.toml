@@ -22,7 +22,7 @@ enableRobotsTXT = true
   phone = "+43 664 5442222"
   whatsapp = "436645442222"
   email = "ulf@ersteschischule.at"
-  address = "Stahlhammergasse 268, 5542 Flachau, Österreich"
+  # Adresse, Angebote, Preise, Saison, Treffpunkt: data/ulf.yaml (eine Quelle für Seite und Agenten)
 
   # --- Anfrageformular (layouts/partials/anfrage-formular.html, assets/js/anfrage.js) ---------------
   # Das Formular erscheint erst, wenn anfrageEndpoint gesetzt ist (und Turnstile laufen kann).

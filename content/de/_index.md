@@ -16,37 +16,6 @@ about_text: >
   beizubringen. Ohne Sammelplatz, ohne Gruppennummer. Nur Sie, der Schnee und ich.
 offers_title_light: "Angebote &"
 offers_title_accent: "Preise"
-offers_note: "Saison Dezember bis April · Treffpunkt nach Vereinbarung, direkt an der Piste in Flachau"
-offers:
-  - name: "Schnupperstunde"
-    id: "schnupperstunde"
-    preis_eur: 75
-    wert: "Schnupperstunde"
-    duration: "55 Minuten"
-    price: "€ 75"
-    text: "Ideal zum Kennenlernen oder für gezieltes Technik-Feintuning."
-  - name: "Halbtag privat"
-    id: "halbtag_privat"
-    preis_eur: 195
-    wert: "Halbtag privat"
-    duration: "3 Stunden"
-    price: "€ 195"
-    text: "Der Klassiker: genug Zeit für echte Fortschritte — vormittags oder nachmittags."
-    featured: true
-  - name: "Ganztag privat"
-    id: "ganztag_privat"
-    preis_eur: 320
-    wert: "Ganztag privat"
-    duration: "bis 6 Stunden"
-    price: "€ 320"
-    text: "Ein ganzer Tag nur für Sie: Technik, Geheimtipps und die schönsten Abfahrten der Region."
-  - name: "Weitere Person"
-    id: "weitere_person"
-    preis_eur: 15
-    zuschlag: true
-    duration: "je Person"
-    price: "+ € 15"
-    text: "Familie oder Freunde auf ähnlichem Niveau? Gerne bis 4 Personen."
 why_title_light: "Warum privat bei"
 why_title_accent: "Ulf?"
 why:

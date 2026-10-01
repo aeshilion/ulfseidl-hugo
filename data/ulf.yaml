@@ -1,0 +1,207 @@
+# ==================================================================================================
+#  EINZIGE QUELLE für alles, was Ulf anbietet und was Agenten über ihn erfahren dürfen.
+#
+#  Gelesen von:
+#    layouts/index.html                     Angebotskarten, Saison/Treffpunkt-Zeile, Adresse, JSON-LD
+#    layouts/partials/anfrage-formular.html Angebots-Auswahl im Formular
+#    layouts/partials/katalog.html          Katalog für die WebMCP-Werkzeuge (assets/js/anfrage.js),
+#                                           /webmcp.json und /llms.txt
+#  Seite und Werkzeuge lesen dieselben Zeilen — eine Preisänderung hier ändert beides.
+#
+#  REGELN
+#  - Nur, was auf ersteschischule.at steht oder Ulf bestätigt hat. Nichts erfinden, nichts schätzen.
+#  - Leeres Feld ("" oder []) = noch offen, mit "TODO Ulf:" im Kommentar daneben. Leere Felder
+#    erscheinen NIRGENDS (nicht auf der Seite, nicht in Werkzeugen, nicht in webmcp.json/llms.txt);
+#    Agenten bekommen stattdessen „bitte direkt bei Ulf erfragen“ (siehe offen_bei_ulf).
+#  - Tatsachen ohne Zahl tragen einen `beleg`: einen wörtlichen Satzteil der deutschen Startseite bzw.
+#    Datenschutzerklärung. tests/webmcp-probe.py prüft, dass jeder Beleg im gebauten HTML steht.
+#  - Mehrsprachige Felder: {de, en, nl}. Werkzeug-Antworten sind deutsch; die Seite zeigt ihre Sprache.
+#  - Werkzeug-Texte (Beschreibungen) stehen in data/webmcp.yaml.
+# ==================================================================================================
+
+anbieter:
+  name: "Ulf Seidl"
+  rolle: "Privat-Skilehrer"
+  beschreibung: "Privater Skiunterricht in Flachau (Snow Space Salzburg): ein Lehrer, volle Aufmerksamkeit, auf dem Niveau der Gäste."
+  website: "https://ersteschischule.at/"
+  sprachen_seite: ["de", "en", "nl"]
+  adresse:
+    strasse: "Stahlhammergasse 268"
+    plz: "5542"
+    ort: "Flachau"
+    land: "Österreich"
+    land_code: "AT"
+  # Telefon, WhatsApp und E-Mail stehen in hugo.toml [params] (phone, whatsapp, email) — dort auch für
+  # Kopfzeile, Impressum-Layout und Formular. Der Katalog liest sie von dort.
+
+waehrung: "EUR"
+personen_max: 4
+
+# Angebotskarten (Reihenfolge = Reihenfolge auf der Seite). `wert` ist der Formularwert und muss
+# wörtlich in THEMEN_LISTE der contact-api-Instanz stehen (projekt-entwicklung-contact-api/deploy/ulf/).
+angebote:
+  - id: "schnupperstunde"
+    wert: "Schnupperstunde"
+    preis_eur: 75
+    dauer_minuten: 55
+    name: { de: "Schnupperstunde", en: "Taster lesson", nl: "Proefles" }
+    dauer: { de: "55 Minuten", en: "55 minutes", nl: "55 minuten" }
+    text:
+      de: "Ideal zum Kennenlernen oder für gezieltes Technik-Feintuning."
+      en: "Perfect to get started or for focused technique fine-tuning."
+      nl: "Ideaal om kennis te maken of om gericht aan uw techniek te werken."
+  - id: "halbtag_privat"
+    wert: "Halbtag privat"
+    preis_eur: 195
+    dauer_minuten: 180
+    featured: true
+    name: { de: "Halbtag privat", en: "Private half day", nl: "Halve dag privé" }
+    dauer: { de: "3 Stunden", en: "3 hours", nl: "3 uur" }
+    text:
+      de: "Der Klassiker: genug Zeit für echte Fortschritte — vormittags oder nachmittags."
+      en: "The classic: enough time for real progress — mornings or afternoons."
+      nl: "De klassieker: genoeg tijd voor echte vooruitgang — 's ochtends of 's middags."
+  - id: "ganztag_privat"
+    wert: "Ganztag privat"
+    preis_eur: 320
+    dauer_minuten_bis: 360
+    name: { de: "Ganztag privat", en: "Private full day", nl: "Hele dag privé" }
+    dauer: { de: "bis 6 Stunden", en: "up to 6 hours", nl: "tot 6 uur" }
+    text:
+      de: "Ein ganzer Tag nur für Sie: Technik, Geheimtipps und die schönsten Abfahrten der Region."
+      en: "A whole day just for you: technique, local secrets and the region's finest runs."
+      nl: "Een hele dag alleen voor u: techniek, lokale tips en de mooiste afdalingen van de regio."
+  - id: "weitere_person"
+    zuschlag: true
+    preis_eur: 15
+    name: { de: "Weitere Person", en: "Additional person", nl: "Extra persoon" }
+    dauer: { de: "je Person", en: "per person", nl: "per persoon" }
+    text:
+      de: "Familie oder Freunde auf ähnlichem Niveau? Gerne bis 4 Personen."
+      en: "Family or friends at a similar level? Up to 4 people welcome."
+      nl: "Familie of vrienden van vergelijkbaar niveau? Tot 4 personen welkom."
+
+saison:
+  von_monat: 12
+  bis_monat: 4
+  text: { de: "Saison Dezember bis April", en: "Season December to April", nl: "Seizoen december tot april" }
+  kurzfristig: "Auch während der Saison sind oft noch kurzfristig Termine frei; am schnellsten per Telefon oder WhatsApp."
+  kurzfristig_beleg: "auch während der Saison oft noch Termine frei"
+  genaue_daten: ""        # TODO Ulf: erster und letzter Unterrichtstag der Saison 2026/27 (z. B. „6.12.2026–6.4.2027“)
+
+treffpunkt:
+  text:
+    de: "Treffpunkt nach Vereinbarung, direkt an der Piste in Flachau"
+    en: "meeting point by arrangement, right on the slopes of Flachau"
+    nl: "ontmoetingspunt in overleg, direct aan de piste in Flachau"
+  gebiet: ["Flachau", "Snow Space Salzburg"]
+  gebiet_beleg: "mitten im Snow Space Salzburg"
+  hinweis_adresse: "Die Adresse Stahlhammergasse 268 ist die Geschäftsadresse, nicht der Treffpunkt."
+  anfahrt: ""             # TODO Ulf: Anfahrt nach Flachau / zum üblichen Treffpunkt (Auto, Skibus, Bahn bis Altenmarkt?)
+  parken: ""              # TODO Ulf: Parkmöglichkeit am üblichen Treffpunkt
+  uebliche_treffpunkte: [] # TODO Ulf: übliche Treffpunkte, z. B. { name: "Talstation …", hinweis: "…" }
+
+# Baustein 3: Fachkunde und Nachweise. Nur, was im Text über Ulf steht. Nachweis-Felder (Aussteller,
+# Jahr, Prüf-URL) füllt Ulf; ohne sie bleibt der Eintrag eine Selbstauskunft und wird so bezeichnet.
+qualifikationen:
+  - id: "staatlich_gepruefter_skilehrer"
+    bezeichnung: "Staatlich geprüfter Skilehrer"
+    beleg: "staatlich geprüfter Skilehrer"
+    aussteller: ""        # TODO Ulf: ausstellende Stelle (z. B. Landesskilehrerverband / Bundessportakademie?)
+    jahr: ""              # TODO Ulf: Jahr der Prüfung
+    nachweis_url: ""      # TODO Ulf: öffentliche Prüf-URL, falls es eine gibt (sonst leer lassen)
+  - id: "erfahrung_flachau"
+    bezeichnung: "Seit über drei Jahrzehnten Skilehrer auf den Pisten von Flachau"
+    beleg: "seit über drei Jahrzehnten"
+  - id: "skischulleitung"
+    bezeichnung: "Viele Jahre eine der großen Skischulen in Flachau aufgebaut und geführt"
+    beleg: "eine der großen Skischulen des Ortes aufgebaut und geführt"
+  - id: "unterrichtssprachen"
+    bezeichnung: "Unterricht auf Deutsch und Englisch"
+    beleg: "Deutsch und Englisch"
+  - id: "zielgruppen"
+    bezeichnung: "Kinder, Erwachsene und Wiedereinsteiger, jedes Alter und jedes Niveau — vom ersten Pflugbogen bis zum Carving auf der schwarzen Piste"
+    beleg: "Kinder, Erwachsene, Wiedereinsteiger — jedes Alter, jedes Niveau"
+# TODO Ulf: Mitgliedschaften (Skilehrerverband, WKO …) — als weitere Einträge oben, je mit beleg/nachweis_url.
+
+# Ablauf und Bedingungen. `ablauf` steht so auf der Seite; die leeren Felder füllt Ulf.
+bedingungen:
+  ablauf:
+    - text: "Anfrage per Telefon, WhatsApp, E-Mail oder über das Anfrageformular auf der Startseite. Ulf antwortet persönlich mit einem Terminvorschlag; über die Website wird nichts verbindlich gebucht."
+      beleg: "ich melde mich persönlich mit einem Terminvorschlag"
+    - text: "Der Treffpunkt wird vereinbart und liegt direkt an der Piste in Flachau; es gibt keinen Sammelplatz und keine Gruppennummer."
+      beleg: "Ohne Sammelplatz, ohne Gruppennummer"
+    - text: "Weitere Personen auf ähnlichem Niveau können mitkommen, bis 4 Personen insgesamt; je weitere Person kommen 15 Euro dazu."
+      beleg: "Familie oder Freunde auf ähnlichem Niveau? Gerne bis 4 Personen."
+  storno: ""              # TODO Ulf: Stornoregel (bis wann kostenlos, was danach?)
+  schlechtwetter: ""      # TODO Ulf: was gilt bei Sturm, Liftstillstand, Nebel?
+  zahlung: ""             # TODO Ulf: Zahlungsart (bar, Karte, Überweisung?) und Zeitpunkt (vorher, am Tag?)
+  liftkarte: ""           # TODO Ulf: Ist die Liftkarte im Preis enthalten? (vermutlich nein — bitte bestätigen)
+  leihausruestung: ""     # TODO Ulf: Leihausrüstung — eigene Empfehlung/Verleih in Flachau?
+  kinder_mindestalter: "" # TODO Ulf: ab welchem Alter unterrichtest du Kinder?
+
+# Baustein 4: Häufige Fragen. Jede Antwort setzt sich NUR aus Belegen der Seite zusammen.
+faqs:
+  - frage: "Was kostet eine Privatstunde bei Ulf Seidl?"
+    antwort: "Schnupperstunde (55 Minuten) 75 Euro, Halbtag privat (3 Stunden) 195 Euro, Ganztag privat (bis 6 Stunden) 320 Euro. Jede weitere Person auf ähnlichem Niveau kostet 15 Euro zusätzlich, bis 4 Personen."
+    belege: ["€ 75", "€ 195", "€ 320", "+ € 15"]
+  - frage: "Wann ist Saison?"
+    antwort: "Unterrichtet wird in der Wintersaison von Dezember bis April."
+    belege: ["Saison Dezember bis April"]
+  - frage: "Wo treffen wir uns?"
+    antwort: "Der Treffpunkt wird nach Vereinbarung festgelegt, direkt an der Piste in Flachau (Snow Space Salzburg)."
+    belege: ["Treffpunkt nach Vereinbarung, direkt an der Piste in Flachau"]
+  - frage: "Für wen ist der Unterricht geeignet?"
+    antwort: "Für Kinder, Erwachsene und Wiedereinsteiger, jedes Alter und jedes Niveau — vom ersten Pflugbogen bis zum Carving auf der schwarzen Piste."
+    belege: ["Kinder, Erwachsene, Wiedereinsteiger — jedes Alter, jedes Niveau", "Vom ersten Pflugbogen bis zum Carving auf der schwarzen Piste"]
+  - frage: "Können mehrere Personen gemeinsam Unterricht nehmen?"
+    antwort: "Ja, Familie oder Freunde auf ähnlichem Niveau, bis 4 Personen. Jede weitere Person kostet 15 Euro zusätzlich."
+    belege: ["Familie oder Freunde auf ähnlichem Niveau? Gerne bis 4 Personen."]
+  - frage: "In welcher Sprache wird unterrichtet?"
+    antwort: "Auf Deutsch und Englisch."
+    belege: ["Deutsch und Englisch"]
+  - frage: "Kann ich kurzfristig buchen?"
+    antwort: "Ja, auch während der Saison sind oft noch Termine frei. Am schnellsten geht es telefonisch oder per WhatsApp."
+    belege: ["auch während der Saison oft noch Termine frei", "Am schnellsten erreichen Sie mich telefonisch oder per WhatsApp"]
+  - frage: "Wie läuft eine Anfrage ab?"
+    antwort: "Per Telefon, WhatsApp, E-Mail oder über das Anfrageformular auf der Startseite. Ulf meldet sich persönlich mit einem Terminvorschlag; mit E-Mail-Adresse kommt eine Eingangsbestätigung."
+    belege: ["ich melde mich persönlich mit einem Terminvorschlag", "Mit E-Mail-Adresse erhalten Sie eine Bestätigung"]
+  - frage: "Was bringt eine Privatstunde gegenüber einem Gruppenkurs?"
+    antwort: "Volle Aufmerksamkeit eines Lehrers; laut Ulf ersetzt eine Stunde bei ihm Tage im Gruppenkurs. Er kennt die Pisten von Flachau genau: beste Hänge, keine Wartezeiten."
+    belege: ["eine Stunde bei mir ersetzt Tage im Gruppenkurs", "beste Hänge, keine Wartezeiten"]
+
+# Baustein 7: Bewertungen und Stimmen. NUR echte, freigegebene Stimmen (mit Einverständnis der Person).
+# Solange die Liste leer ist, wird das Werkzeug list_stimmen NICHT angemeldet.
+stimmen: []               # TODO Ulf: echte Gästestimmen, je { text, name_oder_initialen, datum, quelle_url }
+
+# Baustein 1 und 8: Kundenfragen aus echten Gesprächen. Leer, bis Ulf echte (anonymisierte) Fragen liefert.
+kundenfragen: []          # TODO Ulf: häufige echte Fragen von Gästen (WhatsApp/Telefon), anonymisiert, mit Antwort
+
+# Rechtliches: Kurzfassung der Datenschutzerklärung. Jeder Punkt mit Beleg auf content/de/datenschutz.
+datenschutz:
+  - text: "Die Website setzt keine Cookies und verwendet kein Tracking und keine Analyse-Dienste."
+    beleg: "keine Cookies"
+  - text: "Hosting als statische Website bei GitHub Pages; der Hoster verarbeitet technisch bedingt Server-Logdaten."
+    beleg: "GitHub Pages"
+  - text: "Anfragen über das Formular nimmt ein Server in der EU (Hetzner, Falkenstein) entgegen, betrieben von EA Projekt-Entwicklung als Auftragsverarbeiter; weitergeleitet per E-Mail an Ulfs Postfach bei ALL-INKL.COM."
+    beleg: "Hetzner Online GmbH, Falkenstein"
+  - text: "Die IP-Adresse wird zur Missbrauchsabwehr gespeichert und nach 30 Tagen automatisch gelöscht."
+    beleg: "nach 30 Tagen automatisch gelöscht"
+  - text: "Das Formular ist mit Cloudflare Turnstile geschützt; der Dienst lädt erst, wenn ein Feld des Formulars berührt wird."
+    beleg: "erst geladen, wenn Sie ein Feld des Formulars berühren"
+  - text: "Anfragen werden nicht mit künstlicher Intelligenz ausgewertet und nicht an Dritte weitergegeben."
+    beleg: "nicht mit künstlicher Intelligenz"
+  - text: "Rechte: Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit, Widerspruch, Widerruf; Beschwerde bei der Datenschutzbehörde (dsb.gv.at)."
+    beleg: "dsb.gv.at"
+
+# Themen, zu denen die Website (noch) nichts sagt. Agenten bekommen sie als „bitte bei Ulf erfragen“.
+# Ein Thema fällt aus der Liste, sobald das Feld oben (Pfad in `feld`) gefüllt ist.
+offen_bei_ulf:
+  - { thema: "Stornobedingungen", feld: "bedingungen.storno" }
+  - { thema: "Regelung bei Schlechtwetter oder Liftstillstand", feld: "bedingungen.schlechtwetter" }
+  - { thema: "Zahlungsart und Zahlungszeitpunkt", feld: "bedingungen.zahlung" }
+  - { thema: "Ob die Liftkarte im Preis enthalten ist", feld: "bedingungen.liftkarte" }
+  - { thema: "Leihausrüstung", feld: "bedingungen.leihausruestung" }
+  - { thema: "Mindestalter für Kinder", feld: "bedingungen.kinder_mindestalter" }
+  - { thema: "Genaue Saisondaten (erster und letzter Unterrichtstag)", feld: "saison.genaue_daten" }
+  - { thema: "Genauer Treffpunkt, Anfahrt und Parken", feld: "treffpunkt.anfahrt" }
