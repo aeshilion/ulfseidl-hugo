@@ -25,6 +25,7 @@ anbieter:
   beschreibung: "Privater Skiunterricht in Flachau (Snow Space Salzburg): ein Lehrer, volle Aufmerksamkeit, auf dem Niveau der Gäste."
   website: "https://ersteschischule.at/"
   sprachen_seite: ["de", "en", "nl"]
+  unterrichtssprachen: ["de", "en"]   # Beleg: „Deutsch und Englisch“ (Startseite, Warum-Liste)
   adresse:
     strasse: "Stahlhammergasse 268"
     plz: "5542"

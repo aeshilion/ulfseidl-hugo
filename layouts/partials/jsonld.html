@@ -1,0 +1,38 @@
+{{- /*
+  JSON-LD für die Startseite je Sprache: SportsActivityLocation (Unterart von LocalBusiness) mit
+  Person und Angeboten. Alles aus data/ulf.yaml + hugo.toml [params] — dieselbe Quelle wie die Karten.
+*/ -}}
+{{- $d := hugo.Data.ulf -}}
+{{- $L := site.Language.Lang -}}
+{{- $web := strings.TrimSuffix "/" site.BaseURL | printf "%s/" -}}
+{{- $a := $d.anbieter.adresse -}}
+{{- $angebote := slice -}}
+{{- $preise := slice -}}
+{{- range $d.angebote -}}
+  {{- $o := dict "@type" "Offer" "name" (index .name $L) "description" (index .text $L) "price" .preis_eur "priceCurrency" $d.waehrung "url" (printf "%s#angebote" $.Permalink) -}}
+  {{- if .zuschlag -}}
+    {{- $o = merge $o (dict "priceSpecification" (dict "@type" "UnitPriceSpecification" "price" .preis_eur "priceCurrency" $d.waehrung "referenceQuantity" (dict "@type" "QuantitativeValue" "value" 1 "unitText" (index .dauer $L)))) -}}
+  {{- else -}}
+    {{- $o = merge $o (dict "itemOffered" (dict "@type" "Service" "name" (index .name $L) "serviceType" "Privater Skiunterricht" "provider" (dict "@id" (printf "%s#ulf" $web)))) -}}
+    {{- $preise = $preise | append .preis_eur -}}
+  {{- end -}}
+  {{- $angebote = $angebote | append $o -}}
+{{- end -}}
+{{- $ld := dict
+    "@context" "https://schema.org"
+    "@type" "SportsActivityLocation"
+    "@id" (printf "%s#betrieb" $web)
+    "name" (printf "%s — %s" $d.anbieter.name (cond (eq $L "de") "Skilehrer in Flachau" (cond (eq $L "nl") "skileraar in Flachau" "ski instructor in Flachau")))
+    "description" .Params.description
+    "url" .Permalink
+    "image" (printf "%simages/ulf-action.jpg" $web)
+    "telephone" site.Params.phone
+    "email" site.Params.email
+    "address" (dict "@type" "PostalAddress" "streetAddress" $a.strasse "postalCode" $a.plz "addressLocality" $a.ort "addressRegion" "Salzburg" "addressCountry" $a.land_code)
+    "areaServed" (slice (dict "@type" "Place" "name" "Flachau") (dict "@type" "Place" "name" "Snow Space Salzburg"))
+    "priceRange" (printf "€%d–€%d" (index (sort $preise) 0) (index (sort $preise "value" "desc") 0))
+    "knowsLanguage" $d.anbieter.unterrichtssprachen
+    "founder" (dict "@type" "Person" "@id" (printf "%s#ulf" $web) "name" $d.anbieter.name "jobTitle" (cond (eq $L "de") "Staatlich geprüfter Skilehrer" (cond (eq $L "nl") "Staatlich gediplomeerd skileraar" "State-certified ski instructor")))
+    "makesOffer" $angebote
+-}}
+<script type="application/ld+json">{{ $ld | jsonify | safeJS }}</script>

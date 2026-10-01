@@ -18,6 +18,7 @@
 <meta property="og:image" content="{{ .Site.BaseURL }}images/ulf-action.jpg">
 <meta property="og:url" content="{{ .Permalink }}">
 <meta name="twitter:card" content="summary_large_image">
+{{ partial "jsonld.html" . }}
 {{ with site.Params.webmcpOriginTrial }}<meta http-equiv="origin-trial" content="{{ . }}">{{ end }}
 {{ $css := resources.Get "css/main.css" | minify }}<style>{{ $css.Content | safeCSS }}</style>
 </head>
