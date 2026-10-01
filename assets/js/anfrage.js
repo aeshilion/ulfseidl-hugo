@@ -1,5 +1,5 @@
 /*!
- * Anfrageformular + WebMCP für ersteschischule.at (Ulf Seidl, Privat-Skilehrer in Flachau)
+ * Anfrageformular + WebMCP für ersteschischule.at (Ulf Seidl, Skilehrer in Flachau)
  *
  * 1. Formular (#anfrage-form, partials/anfrage-formular.html): eigene Prüfung mit Meldung NEBEN dem
  *    Feld (aria-invalid + aria-describedby), POST als JSON an die Ulf-Instanz der contact-api.
@@ -392,7 +392,7 @@
     var woerter = norm(text).split(' ');
     return st.filter(function (s) { return woerter.some(function (w) { return w.indexOf(s) === 0; }); }).length;
   }
-  function offenHinweis() { return (KAT.offen_bei_ulf && KAT.offen_bei_ulf.hinweis) || ''; }
+  function offenHinweis() { return (KAT.offen_bei_ulf && KAT.offen_bei_ulf.offen_hinweis) || ''; }
 
   var NEXT_ANFRAGE = formular
     ? ['privatstunde_anfragen mit Name, E-Mail oder Telefon, Wunschtermin, Angebot (id), Personen, Koennen und Einwilligung aufrufen; gesendet wird erst, wenn die Person selbst auf den Knopf drueckt.',
@@ -423,13 +423,13 @@
       var st = staemme(a.suchbegriff);
       var kandidaten = [];
       KAT.faqs.faqs.forEach(function (f) { kandidaten.push({ bereich: 'Haeufige Frage', titel: f.frage, text: f.antwort, werkzeug: 'list_faqs' }); });
-      KAT.angebote.angebote.forEach(function (x) { kandidaten.push({ bereich: 'Angebot', titel: x.name, text: x.dauer + ', ' + x.preis_text + ' (' + x.preis_eur + ' EUR). ' + x.beschreibung, werkzeug: 'get_angebot', id: x.id }); });
+      KAT.angebote.angebote.forEach(function (x) { kandidaten.push({ bereich: 'Angebot', titel: x.name, text: x.dauer + ', ' + x.preis_text + '. ' + x.beschreibung, werkzeug: 'get_angebot', id: x.id }); });
       (KAT.preise_und_bedingungen.ablauf || []).forEach(function (t) { kandidaten.push({ bereich: 'Ablauf', titel: 'Ablauf', text: t, werkzeug: 'get_preise_und_bedingungen' }); });
       var r = KAT.preise_und_bedingungen.regeln || {};
       Object.keys(r).forEach(function (k) { kandidaten.push({ bereich: 'Bedingungen', titel: k, text: r[k], werkzeug: 'get_preise_und_bedingungen' }); });
       KAT.qualifikationen.qualifikationen.forEach(function (q) { kandidaten.push({ bereich: 'Qualifikation', titel: q.bezeichnung, text: q.bezeichnung + ' (' + q.nachweis + ')', werkzeug: 'list_qualifikationen' }); });
-      kandidaten.push({ bereich: 'Saison', titel: 'Saison', text: 'Saison ' + KAT.saison.zeitraum + '. ' + KAT.saison.kurzfristig, werkzeug: 'get_saison' });
-      kandidaten.push({ bereich: 'Treffpunkt', titel: 'Treffpunkt', text: KAT.treffpunkt.treffpunkt + ' (' + KAT.treffpunkt.gebiet.join(', ') + '). ' + KAT.treffpunkt.hinweis, werkzeug: 'get_treffpunkt_und_anfahrt' });
+      kandidaten.push({ bereich: 'Saison', titel: 'Saison', text: 'Saison ' + KAT.saison.zeitraum + '. ' + KAT.saison.kurzfristig + ' ' + KAT.saison.kontakt, werkzeug: 'get_saison' });
+      kandidaten.push({ bereich: 'Treffpunkt', titel: 'Treffpunkt', text: KAT.treffpunkt.treffpunkt + ' (' + KAT.treffpunkt.gebiet.join(', ') + ').', werkzeug: 'get_treffpunkt_und_anfahrt' });
       kandidaten.push({ bereich: 'Kontakt', titel: 'Kontakt', text: 'Telefon und WhatsApp ' + KAT.kontakt.telefon + ', E-Mail ' + KAT.kontakt.email + '. ' + KAT.kontakt.hinweis, werkzeug: 'get_kontakt' });
       var hits = kandidaten.map(function (k) { return { k: k, n: treffer(k.titel + ' ' + k.text, st) }; })
         .filter(function (x) { return x.n > 0; })
@@ -507,7 +507,7 @@
             }, WARTEZEIT_MS);
             formular.warteAufAbsenden().then(function (r) {
               clearTimeout(uhr);
-              fertig(r.ok ? { gesendet: true, message: r.message, hinweis: 'Ulf meldet sich persoenlich; mit E-Mail-Adresse kommt eine Bestaetigung.' } : { error: r.error, recovery: r.recovery });
+              fertig(r.ok ? { gesendet: true, message: r.message, hinweis: 'Ich melde mich persoenlich mit einem Terminvorschlag. Mit E-Mail-Adresse erhalten Sie eine Bestaetigung.' } : { error: r.error, recovery: r.recovery });
             });
           });
         };

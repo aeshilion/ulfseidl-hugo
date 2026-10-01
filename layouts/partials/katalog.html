@@ -5,6 +5,8 @@
     layouts/index.webmcp.json     /webmcp.json
     layouts/index.llms.txt        /llms.txt
   Antworten deutsch. Leere Felder aus ulf.yaml (TODO Ulf) erscheinen nicht, sondern als offen_bei_ulf.
+  Jede Aussage über Ulf ist ein Zitat der Seite aus ulf.yaml — hier wird KEINE eigene Aussage formuliert.
+  Hinweise über den Katalog selbst (keine Aussage über Ulf) stehen nur unter meta_hinweis/offen_hinweis.
   Aufruf: partial "katalog.html" (dict "mitFormular" true|false)
 */ -}}
 {{- $d := hugo.Data.ulf -}}
@@ -32,7 +34,7 @@
       "id" .id
       "name" .name.de
       "namen" .name
-      "art" (cond (eq .zuschlag true) "Aufpreis je weitere Person" "Privatstunde")
+      "aufpreis_je_person" (eq .zuschlag true)
       "dauer" .dauer.de
       "preis_eur" .preis_eur
       "preis_text" (partial "preis.html" . | plainify | htmlUnescape)
@@ -49,10 +51,10 @@
 
 {{- $saisonText := strings.TrimPrefix "Saison " $d.saison.text.de -}}
 {{- $saison := dict "zeitraum" $saisonText "von_monat" $d.saison.von_monat "bis_monat" $d.saison.bis_monat "kurzfristig" $d.saison.kurzfristig
-     "schnellster_weg" (printf "Telefon oder WhatsApp %s" $p.phone) -}}
+     "kontakt" $d.anbieter.kontakt_hinweis -}}
 {{- with $d.saison.genaue_daten }}{{ $saison = merge $saison (dict "genaue_daten" .) }}{{ end -}}
 
-{{- $treff := dict "treffpunkt" $d.treffpunkt.text.de "gebiet" $d.treffpunkt.gebiet "hinweis" $d.treffpunkt.hinweis_adresse -}}
+{{- $treff := dict "treffpunkt" $d.treffpunkt.text.de "gebiet" $d.treffpunkt.gebiet -}}
 {{- with $d.treffpunkt.anfahrt }}{{ $treff = merge $treff (dict "anfahrt" .) }}{{ end -}}
 {{- with $d.treffpunkt.parken }}{{ $treff = merge $treff (dict "parken" .) }}{{ end -}}
 {{- with $d.treffpunkt.uebliche_treffpunkte }}{{ $treff = merge $treff (dict "uebliche_treffpunkte" .) }}{{ end -}}
@@ -68,14 +70,23 @@
   {{- $quals = $quals | append $q -}}
 {{- end -}}
 
-{{- $ablauf := slice -}}{{- range $d.bedingungen.ablauf }}{{ $ablauf = $ablauf | append .text }}{{ end -}}
+{{- $ablauf := slice -}}{{- range $d.bedingungen.ablauf }}{{ $ablauf = $ablauf | append . }}{{ end -}}
 {{- $regeln := dict -}}
 {{- range $k, $v := $d.bedingungen }}{{ if and (ne $k "ablauf") $v }}{{ $regeln = merge $regeln (dict $k $v) }}{{ end }}{{ end -}}
 
-{{- $faqs := slice -}}{{- range $d.faqs }}{{ $faqs = $faqs | append (dict "frage" .frage "antwort" .antwort) }}{{ end -}}
-{{- range $d.kundenfragen }}{{ $faqs = $faqs | append (dict "frage" .frage "antwort" .antwort) }}{{ end -}}
+{{- /* Preis-Antwort aus den Angebotsdaten (die Probe prüft sie gegen die Karten der Seite) */ -}}
+{{- $preisAntwort := slice -}}
+{{- range $d.angebote }}{{ $preisAntwort = $preisAntwort | append (printf "%s (%s): %s." .name.de .dauer.de (partial "preis.html" . | plainify | htmlUnescape)) }}{{ end -}}
+{{- $faqs := slice -}}
+{{- range (append $d.kundenfragen $d.faqs) -}}
+  {{- $teile := slice -}}
+  {{- if .aus_angeboten }}{{ $teile = $preisAntwort }}{{ else -}}
+    {{- range .antwort }}{{ $teile = $teile | append (cond (findRE `[.!?]$` .) . (printf "%s." .)) }}{{ end -}}
+  {{- end -}}
+  {{- $faqs = $faqs | append (dict "frage" .frage "antwort" (delimit $teile " ")) -}}
+{{- end -}}
 
-{{- $ds := slice -}}{{- range $d.datenschutz }}{{ $ds = $ds | append .text }}{{ end -}}
+{{- $ds := slice -}}{{- range $d.datenschutz }}{{ $ds = $ds | append . }}{{ end -}}
 {{- $dsUrls := dict -}}{{- $impUrls := dict -}}
 {{- range site.Home.AllTranslations -}}
   {{- $l := .Language.Lang -}}
@@ -91,14 +102,14 @@
     "email" $p.email
     "adresse" $adresseText
     "website" $web
-    "hinweis" "Am schnellsten telefonisch oder per WhatsApp, auch kurzfristig waehrend der Saison. Ueber die Website wird nichts verbindlich gebucht; Ulf meldet sich persoenlich."
+    "hinweis" $d.anbieter.kontakt_hinweis
 -}}
 {{- if $mitFormular }}{{ $kontakt = merge $kontakt (dict "anfrageformular" (printf "%s#anfrage" $web) "anfrage_werkzeug" "privatstunde_anfragen") }}{{ end -}}
 
 {{- $katalog := dict
-    "anbieter" (dict "name" $d.anbieter.name "rolle" $d.anbieter.rolle "beschreibung" $d.anbieter.beschreibung "website" $web "adresse" $adresseText "sprachen_seite" $d.anbieter.sprachen_seite)
-    "angebote" (dict "anbieter" (printf "%s, %s, Flachau (Salzburg, Oesterreich)" $d.anbieter.name $d.anbieter.rolle) "waehrung" $d.waehrung "personen_max" $d.personen_max "angebote" $angebote
-                     "hinweis" (printf "%s · %s. Preise laut Website; ueber die Website wird nichts verbindlich gebucht." $d.saison.text.de $d.treffpunkt.text.de))
+    "anbieter" (dict "name" $d.anbieter.name "rolle" $d.anbieter.rolle "titel" $d.anbieter.titel "beschreibung" $d.anbieter.beschreibung "website" $web "adresse" $adresseText "sprachen_seite" $d.anbieter.sprachen_seite)
+    "angebote" (dict "anbieter" $d.anbieter.titel "waehrung" $d.waehrung "personen_max" $d.personen_max "angebote" $angebote
+                     "hinweis" (printf "%s · %s" $d.saison.text.de $d.treffpunkt.text.de))
     "preise_und_bedingungen" (dict "waehrung" $d.waehrung "preise" $angebote "aufpreis_je_weitere_person_eur" $zuschlag.preis_eur "personen_max" $d.personen_max
                      "ablauf" $ablauf "regeln" $regeln "offen_bei_ulf" $offen "offen_hinweis" $offenHinweis)
     "faqs" (dict "faqs" $faqs)
@@ -107,9 +118,9 @@
     "kontakt" $kontakt
     "qualifikationen" (dict "anbieter" $d.anbieter.name "qualifikationen" $quals)
     "stimmen" (dict "stimmen" $d.stimmen)
-    "impressum" (dict "name" $d.anbieter.name "taetigkeit" "Skilehrer" "adresse" $adresseText "telefon" $p.phone "email" $p.email "impressum_url" $impUrls.de "impressum_urls" $impUrls "hinweis" "Kurzfassung. Massgeblich ist das deutsche Impressum unter impressum_url.")
-    "datenschutz" (dict "kurzfassung" $ds "verantwortlicher" (printf "%s, %s, %s" $d.anbieter.name $adresseText $p.email) "datenschutz_url" $dsUrls.de "datenschutz_urls" $dsUrls "hinweis" "Kurzfassung. Massgeblich ist die vollstaendige Datenschutzerklaerung.")
-    "offen_bei_ulf" (dict "themen" $offen "hinweis" $offenHinweis)
+    "impressum" (dict "name" $d.anbieter.name "taetigkeit" "Skilehrer" "adresse" $adresseText "telefon" $p.phone "email" $p.email "impressum_url" $impUrls.de "impressum_urls" $impUrls "meta_hinweis" "Kurzfassung. Massgeblich ist das deutsche Impressum unter impressum_url.")
+    "datenschutz" (dict "kurzfassung" $ds "verantwortlicher" (printf "%s, %s, %s" $d.anbieter.name $adresseText $p.email) "datenschutz_url" $dsUrls.de "datenschutz_urls" $dsUrls "meta_hinweis" "Kurzfassung in woertlichen Saetzen. Massgeblich ist die vollstaendige Datenschutzerklaerung.")
+    "offen_bei_ulf" (dict "themen" $offen "offen_hinweis" $offenHinweis)
 -}}
 
 {{- /* Werkzeuge: Platzhalter ersetzen, bedingte weglassen */ -}}

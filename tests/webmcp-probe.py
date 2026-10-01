@@ -9,8 +9,11 @@ Baut die Seite (production, wie CI) und prüft:
      in allen Sprachen und in /webmcp.json.
   B. Keine erfundenen Inhalte: jeder Preis auf der Seite (Karten, Formular-Auswahl, JSON-LD) = Preis in
      data/ulf.yaml = Preis im Katalog = Preis in /webmcp.json = Preis in /llms.txt; kein „€ n“ auf der
-     Seite, das nicht im Katalog steht; jeder `beleg`/`belege` aus data/ulf.yaml steht wörtlich auf der
-     deutschen Startseite bzw. Datenschutzerklärung; kein „TODO“ in Seite, Katalog, webmcp.json, llms.txt;
+     Seite, das nicht im Katalog steht; jedes Zitat aus data/ulf.yaml steht wörtlich auf der
+     deutschen Startseite bzw. Datenschutzerklärung; AUSSAGE OHNE BELEG = ROT: jedes Wort (≥ 4 Buchstaben)
+     jeder Aussage im fertigen Katalog, in JSON-LD und im llms.txt-Vorspann muss auf der Seite (DE/EN/NL,
+     Datenschutz, Impressum) vorkommen — nur Fragen und ausdrückliche Katalog-Hinweise (meta_hinweis,
+     offen_hinweis, offen_bei_ulf, nachweis) sind ausgenommen; JSON-LD ohne founder/addressRegion; kein „TODO“ in Seite, Katalog, webmcp.json, llms.txt;
      list_stimmen nur, wenn data/ulf.yaml echte Stimmen hat; jedes leere TODO-Feld steht als offenes
      Thema in llms.txt.
   C. llms.txt nennt jedes Werkzeug, jede Frage, jeden Preis; JSON-LD ist JSON und trägt die Preise.
@@ -65,7 +68,7 @@ def lesen(wurzel):
     """Alle geprüften Ausgaben als Texte — Mutationen im Selbsttest wirken auf diese Kopie."""
     w = pathlib.Path(wurzel)
     b = {"wurzel": str(w), "webmcp": (w / "webmcp.json").read_text(), "llms": (w / "llms.txt").read_text(),
-         "datenschutz": (w / "datenschutz" / "index.html").read_text()}
+         "datenschutz": (w / "datenschutz" / "index.html").read_text(), "impressum": (w / "impressum" / "index.html").read_text()}
     for s, p in SPRACHEN.items():
         b["home_" + s] = (w / p / "index.html").read_text()
     return b
@@ -208,15 +211,88 @@ def statisch(b, daten, fehler):
         pruef(f"- {t}" in L, f"llms.txt: offenes Thema fehlt: {t}")
     pruef(K["offen_bei_ulf"]["themen"] == offen, "Katalog offen_bei_ulf ≠ leere Felder in data/ulf.yaml")
 
-    # Belege: jede Tatsache ohne Zahl steht wörtlich auf der Seite
-    de_text = text_aus_html(b["home_de"])
-    ds_text = text_aus_html(b["datenschutz"])
-    belege = [q["beleg"] for q in daten["qualifikationen"]] + [x["beleg"] for x in daten["bedingungen"]["ablauf"]] \
-        + [daten["saison"]["kurzfristig_beleg"], daten["treffpunkt"]["gebiet_beleg"]] + [y for f in daten["faqs"] for y in f["belege"]]
-    for x in belege:
-        pruef(re.sub(r"\s+", " ", x) in de_text, f"Beleg nicht auf der deutschen Startseite: {x!r}")
+    # Zitate: jede Aussage in data/ulf.yaml steht wörtlich auf der Seite
+    de_text = seitentext(b["home_de"])
+    ds_text = seitentext(b["datenschutz"])
+    for x in zitate(daten):
+        pruef(norm_ws(x) in de_text, f"Zitat nicht auf der deutschen Startseite: {x!r}")
     for x in daten["datenschutz"]:
-        pruef(re.sub(r"\s+", " ", x["beleg"]) in ds_text, f"Datenschutz-Beleg nicht in der Erklärung: {x['beleg']!r}")
+        pruef(norm_ws(x) in ds_text, f"Datenschutz-Zitat nicht in der Erklärung: {x!r}")
+
+    # Aussage ohne Beleg: jedes Wort jeder Aussage muss auf der Seite stehen
+    w = woerter_der_seite(b)
+    for pfad, text in aussagen(K):
+        fremd = sorted({x for x in woerter(text) if x not in w})
+        pruef(not fremd, f"Aussage ohne Beleg auf der Seite (Katalog {pfad}): {fremd} in {text[:120]!r}")
+    for s_ in SPRACHEN:
+        ld = None
+        try:
+            ld = jsonld(b["home_" + s_])
+        except ValueError:
+            pass
+        if ld:
+            pruef("founder" not in json.dumps(ld) and "addressRegion" not in json.dumps(ld), f"{s_}: JSON-LD behauptet founder/addressRegion (steht nicht auf der Seite)")
+            for pfad, text in aussagen(ld, LD_FREI):
+                fremd = sorted({x for x in woerter(text) if x not in w})
+                pruef(not fremd, f"{s_}: JSON-LD-Aussage ohne Beleg ({pfad}): {fremd}")
+    vorspann = " ".join(z[1:] for z in L.splitlines() if z.startswith("> "))
+    fremd = sorted({x for x in woerter(vorspann) if x not in w})
+    pruef(not fremd, f"llms.txt-Vorspann ohne Beleg: {fremd}")
+
+
+# ── Aussagen und Belege ───────────────────────────────────────────────────────────────────────
+# Schlüssel, deren Werte keine Aussage über Ulf sind (Fragen, Hinweise über den Katalog, Kennungen, Adressen)
+FREI = {"frage", "meta_hinweis", "offen_hinweis", "offen_bei_ulf", "themen", "nachweis", "id", "formularwert",
+        "waehrung", "sprachen_seite", "website", "email", "telefon", "telefon_link", "whatsapp", "anfrage_werkzeug",
+        "anfrageformular", "impressum_url", "impressum_urls", "datenschutz_url", "datenschutz_urls", "pruef_url"}
+LD_FREI = {"@context", "@type", "@id", "url", "image", "email", "telephone", "priceCurrency", "addressCountry", "knowsLanguage"}
+
+
+def norm_ws(x):
+    return re.sub(r"\s+", " ", x).strip()
+
+
+def seitentext(h):
+    """Sichtbarer Text + <title> + meta description."""
+    h = re.sub(r"</?(strong|em|b|i|a|span|small)\b[^>]*>", "", h)      # Inline-Auszeichnung trennt keine Wörter
+    extra = re.findall(r"<title>(.*?)</title>", h, re.S) + re.findall(r'<meta name=description content="([^"]*)"', h)
+    return norm_ws(text_aus_html(h) + " " + " ".join(htmlmod.unescape(x) for x in extra))
+
+
+def woerter(text):
+    return {x.lower() for x in re.findall(r"[^\W\d_]{4,}", text)}
+
+
+def woerter_der_seite(b):
+    t = " ".join(seitentext(b[k]) for k in b if k.startswith("home_")) + " " + seitentext(b["datenschutz"]) + " " + seitentext(b["impressum"])
+    return woerter(t)
+
+
+def aussagen(v, frei=FREI, pfad=""):
+    """(pfad, text) für jeden Text, der eine Aussage ist."""
+    if isinstance(v, dict):
+        for k, x in v.items():
+            if k in frei or k.endswith("_url") or k.endswith("_urls"):
+                continue
+            yield from aussagen(x, frei, f"{pfad}.{k}")
+    elif isinstance(v, list):
+        for i, x in enumerate(v):
+            yield from aussagen(x, frei, f"{pfad}[{i}]")
+    elif isinstance(v, str) and not re.match(r"(https?:|tel:|mailto:)", v) and "@" not in v:
+        yield pfad, v
+
+
+def zitate(daten):
+    """Alle Felder in data/ulf.yaml, die als wörtliches Zitat der deutschen Startseite gelten."""
+    a = daten["anbieter"]
+    z = [a["titel"], a["beschreibung"], a["kontakt_hinweis"], daten["saison"]["text"]["de"], daten["saison"]["kurzfristig"],
+         daten["treffpunkt"]["text"]["de"], daten["treffpunkt"]["gebiet_beleg"]]
+    z += [q["bezeichnung"] for q in daten["qualifikationen"]]
+    z += list(daten["bedingungen"]["ablauf"])
+    z += [v for k, v in daten["bedingungen"].items() if k != "ablauf" and v]       # von Ulf gefüllt → muss auf die Seite
+    z += [y for f in daten["faqs"] + daten.get("kundenfragen", []) for y in f.get("antwort", [])]
+    z += [x.get("text", "") for x in daten.get("stimmen", [])]
+    return [x for x in z if x]
 
 
 def feld(daten, pfad):
@@ -308,6 +384,7 @@ def mutationen(b):
     def katalog(neu):
         c = dict(b); c["home_de"] = b["home_de"].replace(roh, "<script type=application/json id=ulf-katalog>" + json.dumps(neu) + "</script>"); return c
     wj = json.loads(b["webmcp"]); wj["webmcp"]["werkzeuge"].pop(3)
+    ohne_beleg = json.loads(json.dumps(k)); ohne_beleg["katalog"]["kontakt"]["hinweis"] += " Ueber die Website wird nichts verbindlich gebucht."
     return {
         "Kartenpreis weicht ab": ersetze("home_de", "<p class=price>€ 195</p>", "<p class=price>€ 190</p>"),
         "erfundener Preis auf der Seite": ersetze("home_en", "</h3>", "</h3><p>from € 59</p>"),
@@ -318,6 +395,10 @@ def mutationen(b):
         "Preis in llms.txt weicht ab": ersetze("llms", "€ 320", "€ 300"),
         "Beleg fehlt auf der Seite": ersetze("home_de", "seit über drei Jahrzehnten", "seit Jahren"),
         "JSON-LD-Preis weicht ab": ersetze("home_nl", '"price":75', '"price":70'),
+        "Aussage ohne Beleg im Katalog (kontakt.hinweis)": katalog(ohne_beleg),
+        "JSON-LD behauptet founder": ersetze("home_de", '"@type":"SportsActivityLocation"', '"@type":"SportsActivityLocation","founder":{"@type":"Person","name":"Ulf Seidl"}'),
+        "JSON-LD-Aussage ohne Beleg": ersetze("home_en", '"@type":"SportsActivityLocation"', '"@type":"SportsActivityLocation","slogan":"Best ski school in Austria"'),
+        "llms.txt-Vorspann ohne Beleg": ersetze("llms", "\n> ", "\n> Über die Website wird nichts verbindlich gebucht. "),
     }
 
 
@@ -366,6 +447,10 @@ def main():
         f = []; origin_trial(b_ot, b_ot, token, f)
         print(f"  {'✓' if f else '✕'} Origin-Trial-Meta trotz leerem Token: {len(f)} Fehler erkannt")
         if not f: verfehlt.append("origin-trial")
+        kaputt2 = json.loads(json.dumps(daten)); kaputt2["faqs"][1]["antwort"] = ["Unterrichtet wird in der Wintersaison von Dezember bis April."]
+        f = []; statisch(b, kaputt2, f)
+        print(f"  {'✓' if f else '✕'} Zitat in data/ulf.yaml steht nicht auf der Seite (Wintersaison): {len(f)} Fehler erkannt")
+        if not f: verfehlt.append("zitat")
         kaputt = json.loads(json.dumps(daten)); kaputt["stimmen"] = [{"text": "erfunden"}]
         f = []; statisch(b, kaputt, f)
         print(f"  {'✓' if f else '✕'} list_stimmen-Regel (Daten mit Stimmen, Werkzeug fehlt): {len(f)} Fehler erkannt")

@@ -22,8 +22,8 @@ werkzeuge:
     description: >-
       Listet alle Privatstunden-Angebote von Ulf Seidl, staatlich gepruefter Skilehrer in Flachau (Snow Space Salzburg),
       genau wie auf ersteschischule.at. Liefert je Angebot: id, Name (deutsch, englisch, niederlaendisch), Dauer, Preis in
-      Euro als Zahl (preis_eur) und als Text, Kurzbeschreibung und ob es ein Aufpreis je weiterer Person ist. Dazu Waehrung,
-      Hoechstzahl Personen und den Hinweis, dass ueber die Website nichts verbindlich gebucht wird. Nur lesen.
+      Euro als Zahl (preis_eur) und als Text, Kurzbeschreibung und ob es ein Aufpreis je weiterer Person ist
+      (aufpreis_je_person). Dazu Waehrung, Hoechstzahl Personen sowie Saison und Treffpunkt laut Seite. Nur lesen.
     inputSchema: { type: "object", properties: {}, additionalProperties: false }
     annotations: { readOnlyHint: true }
 
@@ -89,7 +89,7 @@ werkzeuge:
     quelle: "treffpunkt"
     description: >-
       Liefert, wo der Unterricht bei Ulf Seidl stattfindet: Treffpunkt nach Vereinbarung direkt an der Piste in Flachau,
-      das Gebiet (Flachau, Snow Space Salzburg) und den Hinweis, dass die Geschaeftsadresse nicht der Treffpunkt ist.
+      und das Gebiet (Flachau, Snow Space Salzburg), woertlich wie auf ersteschischule.at.
       Gibt Anfahrt, Parken und uebliche Treffpunkte nur zurueck, wenn Ulf sie angegeben hat; sonst stehen sie unter
       offen_bei_ulf. Nur lesen.
     inputSchema: { type: "object", properties: {}, additionalProperties: false }
@@ -100,8 +100,8 @@ werkzeuge:
     quelle: "saison"
     description: >-
       Liefert die Saison, in der Ulf Seidl in Flachau unterrichtet (Dezember bis April, als Text und als Monatszahlen
-      von_monat/bis_monat), den Hinweis zu kurzfristigen Terminen waehrend der Saison und den schnellsten Weg zu einem
-      Termin. Genaue Saisondaten kommen nur zurueck, wenn Ulf sie angegeben hat. Freie Termine kennt nur Ulf selbst -
+      von_monat/bis_monat), den Satz der Seite zu kurzfristigen Terminen waehrend der Saison und den schnellsten Weg zu
+      Ulf laut Seite (Telefon oder WhatsApp). Genaue Saisondaten kommen nur zurueck, wenn Ulf sie angegeben hat. Freie Termine kennt nur Ulf selbst -
       dieses Werkzeug liefert keinen Kalender.
     inputSchema: { type: "object", properties: {}, additionalProperties: false }
     annotations: { readOnlyHint: true }
@@ -110,8 +110,8 @@ werkzeuge:
     title: "Kontakt zu Ulf Seidl"
     quelle: "kontakt"
     description: >-
-      Liefert die Kontaktwege zu Ulf Seidl, Privat-Skilehrer in Flachau: Telefon (auch als tel:-Link), WhatsApp-Link,
-      E-Mail-Adresse, Geschaeftsadresse, die Adresse des Anfrageformulars und den Namen des Werkzeugs, das das Formular
+      Liefert die Kontaktwege zu Ulf Seidl, Skilehrer in Flachau: Telefon (auch als tel:-Link), WhatsApp-Link,
+      E-Mail-Adresse, Adresse, die Adresse des Anfrageformulars und den Namen des Werkzeugs, das das Formular
       fuer die Person ausfuellt (privatstunde_anfragen). Laut Website ist Ulf am schnellsten telefonisch oder per WhatsApp
       erreichbar, auch kurzfristig waehrend der Saison. Nur lesen.
     inputSchema: { type: "object", properties: {}, additionalProperties: false }
@@ -121,9 +121,9 @@ werkzeuge:
     title: "Qualifikation und Erfahrung"
     quelle: "qualifikationen"
     description: >-
-      Liefert Fachkunde und Erfahrung von Ulf Seidl, je Eintrag id, bezeichnung und nachweis: staatlich gepruefter
-      Skilehrer, seit ueber drei Jahrzehnten auf den Pisten von Flachau, viele Jahre Aufbau und Leitung einer grossen
-      Skischule im Ort, Unterrichtssprachen und Zielgruppen. nachweis sagt, ob ein Eintrag nur als Selbstauskunft auf der
+      Liefert Fachkunde und Erfahrung von Ulf Seidl als woertliche Saetze der Seite, je Eintrag id, bezeichnung und
+      nachweis: staatlich gepruefter Skilehrer, seit ueber drei Jahrzehnten auf den Pisten von Flachau, eine der grossen
+      Skischulen des Ortes aufgebaut und gefuehrt, Unterrichtssprachen, Zielgruppen und Koennen. nachweis sagt, ob ein Eintrag nur als Selbstauskunft auf der
       Website steht oder mit Aussteller, Jahr und Pruef-URL belegt ist. Nur lesen.
     inputSchema: { type: "object", properties: {}, additionalProperties: false }
     annotations: { readOnlyHint: true }
@@ -143,9 +143,9 @@ werkzeuge:
     title: "Impressum"
     quelle: "impressum"
     description: >-
-      Liefert die Anbieterangaben von ersteschischule.at: Name (Ulf Seidl), Taetigkeit (Skilehrer), Geschaeftsadresse in
+      Liefert die Anbieterangaben von ersteschischule.at: Name (Ulf Seidl), Taetigkeit (Skilehrer), Adresse in
       Flachau, Telefon und E-Mail sowie die Adresse der vollstaendigen Impressum-Seite (deutsch massgeblich). Fuer
-      rechtlich verbindliche Angaben immer die Impressum-Seite selbst lesen; das Werkzeug gibt nur die Kurzfassung zurueck.
+      die rechtlichen Angaben immer die Impressum-Seite selbst lesen; das Werkzeug gibt nur die Kurzfassung zurueck.
     inputSchema: { type: "object", properties: {}, additionalProperties: false }
     annotations: { readOnlyHint: true }
 
@@ -170,7 +170,7 @@ werkzeuge:
       ok false mit error und recovery). Fragen Sie vorher nach dem echten Namen, nach E-Mail-Adresse oder Telefonnummer (mindestens
       eines), Wunschtermin, Angebot, Personenzahl und Koennen; setzen Sie einwilligung nur auf true, wenn die Person der
       Datenschutzerklaerung zugestimmt hat, und erfinden Sie keine Angaben. Preise vorher mit list_angebote oder
-      get_preise_und_bedingungen holen. Es wird nichts verbindlich gebucht; Ulf meldet sich persoenlich.
+      get_preise_und_bedingungen holen. Ulf meldet sich persoenlich mit einem Terminvorschlag.
     inputSchema:
       type: "object"
       properties:

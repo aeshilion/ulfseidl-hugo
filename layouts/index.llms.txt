@@ -2,9 +2,9 @@
 {{- $k := partial "katalog.html" (dict "mitFormular" (partial "mit-formular.html" .)) -}}
 {{- $K := $k.katalog -}}
 {{- $web := strings.TrimSuffix "/" site.BaseURL | printf "%s/" -}}
-# {{ $K.anbieter.name }} – {{ $K.anbieter.rolle }} in Flachau
+# {{ $K.anbieter.titel }}
 
-> {{ $K.anbieter.beschreibung }} Saison {{ $K.saison.zeitraum }}; {{ $K.treffpunkt.treffpunkt }}. Über die Website wird nichts verbindlich gebucht – Ulf meldet sich persönlich.
+> {{ $K.anbieter.beschreibung }} {{ $K.angebote.hinweis }}.
 
 Website: {{ $web }} (Deutsch, Englisch, Niederländisch). Maschinenlesbarer Katalog: {{ $web }}webmcp.json
 
@@ -18,7 +18,7 @@ Bis {{ $K.angebote.personen_max }} Personen; jede weitere Person auf ähnlichem 
 ## Saison und Treffpunkt
 
 - Saison: {{ $K.saison.zeitraum }}{{ with $K.saison.genaue_daten }} ({{ . }}){{ end }}. {{ $K.saison.kurzfristig }}
-- {{ $K.treffpunkt.treffpunkt }} ({{ delimit $K.treffpunkt.gebiet ", " }}). {{ $K.treffpunkt.hinweis }}
+- {{ $K.treffpunkt.treffpunkt }} ({{ delimit $K.treffpunkt.gebiet ", " }}).
 {{- with $K.treffpunkt.anfahrt }}
 - Anfahrt: {{ . }}{{ end }}
 {{- with $K.treffpunkt.parken }}
@@ -59,7 +59,8 @@ Bis {{ $K.angebote.personen_max }} Personen; jede weitere Person auf ähnlichem 
 
 - Telefon und WhatsApp: {{ $K.kontakt.telefon }} ({{ $K.kontakt.whatsapp }})
 - E-Mail: {{ $K.kontakt.email }}
-- Geschäftsadresse: {{ $K.kontakt.adresse }} (nicht der Treffpunkt)
+- {{ $K.kontakt.hinweis }}
+- Adresse: {{ $K.kontakt.adresse }}
 {{- with $K.kontakt.anfrageformular }}
 - Anfrageformular: {{ . }}{{ end }}
 

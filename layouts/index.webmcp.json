@@ -13,14 +13,14 @@
     "version" 1
     "schema" "ersteschischule/webmcp-katalog-1"
     "generatedAt" (now.UTC.Format "2006-01-02T15:04:05Z")
-    "name" (printf "%s, %s in Flachau" hugo.Data.ulf.anbieter.name hugo.Data.ulf.anbieter.rolle)
+    "name" hugo.Data.ulf.anbieter.titel
     "url" $web
     "seiten" $seiten
     "sprache_der_antworten" "de"
     "llms_txt" (printf "%sllms.txt" $web)
     "webmcp" (dict
         "schnittstelle" "document.modelContext.registerTool (Rueckfall navigator.modelContext), auf der Startseite jeder Sprache"
-        "buchen" "Kein Werkzeug bucht verbindlich. privatstunde_anfragen fuellt das Anfrageformular aus; abgeschickt wird nur vom Menschen."
+        "anfrage" "privatstunde_anfragen fuellt das Anfrageformular aus; abgeschickt wird nur vom Menschen."
         "werkzeuge" $wz)
     "katalog" $k.katalog
 -}}
