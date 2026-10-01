@@ -3,6 +3,8 @@ title = "Ulf Seidl — Skilehrer in Flachau"
 defaultContentLanguage = "de"
 defaultContentLanguageInSubdir = false
 enableRobotsTXT = true
+# Keine Kategorien/Schlagwörter: leere Seiten ohne Layout (Bau-Warnung), nichts davon wird verlinkt.
+disableKinds = ["taxonomy", "term"]
 
 [languages]
   [languages.de]
