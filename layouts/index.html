@@ -126,8 +126,8 @@
 {{- $texte = merge $texte (dict . (i18n .)) -}}
 {{- end }}
 <script type="application/json" id="anfrage-cfg">{{ dict "lang" site.Language.Lang "telefon" site.Params.phone "telefonUri" (replace site.Params.phone " " "") "whatsapp" site.Params.whatsapp "datenschutz" ("datenschutz/" | relLangURL) "texte" $texte | jsonify | safeJS }}</script>
- {{- $mitFormular := and site.Params.anfrageEndpoint (or site.Params.turnstileSitekey site.Params.anfrageOhneTurnstile) | default false }}
-<script type="application/json" id="ulf-katalog">{{ partial "katalog.html" (dict "mitFormular" $mitFormular) | jsonify | safeJS }}</script>
+
+<script type="application/json" id="ulf-katalog">{{ partial "katalog.html" (dict "mitFormular" (partial "mit-formular.html" .)) | jsonify | safeJS }}</script>
 {{- $js := resources.Get "js/anfrage.js" | minify | fingerprint }}
 <script src="{{ $js.RelPermalink }}" integrity="{{ $js.Data.Integrity }}" defer></script>
 </body>

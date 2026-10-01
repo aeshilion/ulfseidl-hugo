@@ -6,6 +6,20 @@ enableRobotsTXT = true
 # Keine Kategorien/Schlagwörter: leere Seiten ohne Layout (Bau-Warnung), nichts davon wird verlinkt.
 disableKinds = ["taxonomy", "term"]
 
+# /webmcp.json und /llms.txt — nur für die Startseite der Hauptsprache (content/de/_index.md: outputs),
+# gebaut aus data/ulf.yaml + data/webmcp.yaml wie die Werkzeuge (layouts/index.webmcp.json, index.llms.txt).
+[outputFormats]
+  [outputFormats.webmcp]
+    mediaType = "application/json"
+    baseName = "webmcp"
+    isPlainText = true
+    notAlternative = true
+  [outputFormats.llms]
+    mediaType = "text/plain"
+    baseName = "llms"
+    isPlainText = true
+    notAlternative = true
+
 [languages]
   [languages.de]
     weight = 1

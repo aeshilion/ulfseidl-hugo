@@ -1,4 +1,5 @@
 ---
+outputs: ["html", "rss", "webmcp", "llms"]
 title: "Ulf Seidl — Skilehrer in Flachau"
 description: "Privater Skiunterricht in Flachau (Snow Space Salzburg). Persönlich, flexibel, auf Ihrem Niveau — beim erfahrenen Skilehrer Ulf Seidl."
 hero_kicker: "Privatunterricht in Flachau"

@@ -1,0 +1,79 @@
+{{- /* /llms.txt (llmstxt.org) — gebaut aus data/ulf.yaml + data/webmcp.yaml über layouts/partials/katalog.html. */ -}}
+{{- $k := partial "katalog.html" (dict "mitFormular" (partial "mit-formular.html" .)) -}}
+{{- $K := $k.katalog -}}
+{{- $web := strings.TrimSuffix "/" site.BaseURL | printf "%s/" -}}
+# {{ $K.anbieter.name }} – {{ $K.anbieter.rolle }} in Flachau
+
+> {{ $K.anbieter.beschreibung }} Saison {{ $K.saison.zeitraum }}; {{ $K.treffpunkt.treffpunkt }}. Über die Website wird nichts verbindlich gebucht – Ulf meldet sich persönlich.
+
+Website: {{ $web }} (Deutsch, Englisch, Niederländisch). Maschinenlesbarer Katalog: {{ $web }}webmcp.json
+
+## Angebote und Preise ({{ $K.angebote.waehrung }})
+{{ range $K.angebote.angebote }}
+- {{ .name }}: {{ .dauer }}, {{ .preis_text }} – {{ .beschreibung }}
+{{- end }}
+
+Bis {{ $K.angebote.personen_max }} Personen; jede weitere Person auf ähnlichem Niveau + € {{ $K.preise_und_bedingungen.aufpreis_je_weitere_person_eur }}.
+
+## Saison und Treffpunkt
+
+- Saison: {{ $K.saison.zeitraum }}{{ with $K.saison.genaue_daten }} ({{ . }}){{ end }}. {{ $K.saison.kurzfristig }}
+- {{ $K.treffpunkt.treffpunkt }} ({{ delimit $K.treffpunkt.gebiet ", " }}). {{ $K.treffpunkt.hinweis }}
+{{- with $K.treffpunkt.anfahrt }}
+- Anfahrt: {{ . }}{{ end }}
+{{- with $K.treffpunkt.parken }}
+- Parken: {{ . }}{{ end }}
+
+## Qualifikation und Erfahrung
+{{ range $q := $K.qualifikationen.qualifikationen }}
+- {{ .bezeichnung }}{{ with .aussteller }} ({{ . }}{{ with $q.jahr }}, {{ . }}{{ end }}){{ end }}{{ with .pruef_url }} – Nachweis: {{ . }}{{ end }}
+{{- end }}
+
+## Ablauf
+{{ range $K.preise_und_bedingungen.ablauf }}
+- {{ . }}
+{{- end }}
+{{- range $name, $text := $K.preise_und_bedingungen.regeln }}
+- {{ $name | humanize }}: {{ $text }}
+{{- end }}
+
+## Häufige Fragen
+{{ range $K.faqs.faqs }}
+### {{ .frage }}
+
+{{ .antwort }}
+{{ end }}
+{{- with $K.stimmen.stimmen }}
+## Stimmen von Gästen
+{{ range . }}
+- „{{ .text }}“ – {{ .name_oder_initialen }}{{ with .datum }}, {{ . }}{{ end }}
+{{- end }}
+{{ end }}
+{{- with $K.offen_bei_ulf.themen }}
+## Noch nicht auf der Website – bitte direkt bei Ulf erfragen
+{{ range . }}
+- {{ . }}
+{{- end }}
+{{ end }}
+## Kontakt
+
+- Telefon und WhatsApp: {{ $K.kontakt.telefon }} ({{ $K.kontakt.whatsapp }})
+- E-Mail: {{ $K.kontakt.email }}
+- Geschäftsadresse: {{ $K.kontakt.adresse }} (nicht der Treffpunkt)
+{{- with $K.kontakt.anfrageformular }}
+- Anfrageformular: {{ . }}{{ end }}
+
+## Für KI-Agenten (WebMCP)
+
+Die Startseite meldet diese Werkzeuge über document.modelContext an (Antworten auf Deutsch):
+{{ range $k.werkzeuge }}
+- `{{ .name }}` – {{ .title }}{{ if not .annotations.readOnlyHint }} (füllt nur das Formular aus; senden muss der Mensch){{ end }}
+{{- end }}
+
+## Seiten
+{{ range site.Home.AllTranslations }}
+- [Startseite {{ .Language.LanguageName }}]({{ .Permalink }})
+{{- end }}
+- [Impressum]({{ $K.impressum.impressum_url }})
+- [Datenschutzerklärung]({{ $K.datenschutz.datenschutz_url }})
+- [Katalog als JSON]({{ $web }}webmcp.json)

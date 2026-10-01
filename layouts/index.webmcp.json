@@ -1,0 +1,27 @@
+{{- /*
+  /webmcp.json — maschinenlesbarer Katalog nach dem Vorbild integrations.at/webmcp.json, dazu das
+  Verzeichnis der Werkzeuge (dieselben Definitionen, die der Browser anmeldet; Muster BIZ eap-webmcp).
+  Quelle: layouts/partials/katalog.html (data/ulf.yaml + data/webmcp.yaml). Nichts hier von Hand pflegen.
+*/ -}}
+{{- $k := partial "katalog.html" (dict "mitFormular" (partial "mit-formular.html" .)) -}}
+{{- $web := strings.TrimSuffix "/" site.BaseURL | printf "%s/" -}}
+{{- $wz := slice -}}
+{{- range $k.werkzeuge }}{{ $wz = $wz | append (dict "name" .name "title" .title "description" .description "inputSchema" .inputSchema "annotations" .annotations) }}{{ end -}}
+{{- $seiten := dict -}}
+{{- range site.Home.AllTranslations }}{{ $seiten = merge $seiten (dict .Language.Lang .Permalink) }}{{ end -}}
+{{- $out := dict
+    "version" 1
+    "schema" "ersteschischule/webmcp-katalog-1"
+    "generatedAt" (now.UTC.Format "2006-01-02T15:04:05Z")
+    "name" (printf "%s, %s in Flachau" hugo.Data.ulf.anbieter.name hugo.Data.ulf.anbieter.rolle)
+    "url" $web
+    "seiten" $seiten
+    "sprache_der_antworten" "de"
+    "llms_txt" (printf "%sllms.txt" $web)
+    "webmcp" (dict
+        "schnittstelle" "document.modelContext.registerTool (Rueckfall navigator.modelContext), auf der Startseite jeder Sprache"
+        "buchen" "Kein Werkzeug bucht verbindlich. privatstunde_anfragen fuellt das Anfrageformular aus; abgeschickt wird nur vom Menschen."
+        "werkzeuge" $wz)
+    "katalog" $k.katalog
+-}}
+{{- $out | jsonify (dict "indent" "  ") -}}

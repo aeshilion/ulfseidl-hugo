@@ -1,0 +1,2 @@
+{{- /* true, wenn das Anfrageformular gebaut wird (gleiche Bedingung wie in anfrage-formular.html). */ -}}
+{{- return (and site.Params.anfrageEndpoint (or site.Params.turnstileSitekey site.Params.anfrageOhneTurnstile) | default false) -}}
