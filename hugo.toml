@@ -50,5 +50,18 @@ disableKinds = ["taxonomy", "term"]
   # nur am Server als TURNSTILE_SECRET in /etc/ulf-contact-api.env).
   turnstileSitekey = "0x4AAAAAAFK-jnpQcDpDW-Re"
   # WebMCP-Origin-Trial-Token für https://ersteschischule.at (Chrome 149–156, Trial endet 17.11.2026).
-  # Leer = kein Meta-Tag; ohne Token sehen nur Browser mit eingeschaltetem WebMCP die Werkzeuge.
+  # Leer = kein Meta-Tag; ohne Token sehen nur Browser mit eingeschaltetem WebMCP die Werkzeuge
+  # (für Besucher sind sie dann UNSICHTBAR — Taxi Alpin hatte genau das, Messung 27.09.2026).
+  # >>> TOKEN HOLEN (Emanuel, Google-Konto wie bei den anderen Kundenseiten):
+  #   1. https://developer.chrome.com/origintrials/#/trials/active → Trial „WebMCP“ → „Register“.
+  #   2. Web Origin: https://ersteschischule.at  (genau so, ohne www, ohne Pfad; die Seite läuft ohne www).
+  #      „Match all subdomains“ und „third-party matching“ NICHT ankreuzen — ein Third-Party-Token im
+  #      statischen Meta-Tag schlägt still fehl.
+  #   3. Den Token (lange base64-Zeichenkette) hier zwischen die Anführungszeichen setzen — roh, nicht
+  #      in zusätzliche Anführungszeichen oder JSON verpackt (projekt-entwicklung.at, 22.09.2026: doppelt
+  #      kodierter Token wurde still verworfen). layouts/index.html schreibt ihn als
+  #      <meta http-equiv="origin-trial" content="…"> in den Kopf jeder Startseite.
+  #   4. Prüfen nach dem Live-Gang in Google Chrome ≥ 149: DevTools → Application → Frames → Origin Trials
+  #      zeigt „WebMCP“ als Valid; `typeof document.modelContext` = "object".
+  #   Der Token ist öffentlich (steht im HTML), kein Geheimnis. Ablauf 17.11.2026 im Kalender halten.
   webmcpOriginTrial = ""
