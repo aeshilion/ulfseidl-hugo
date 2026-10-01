@@ -25,8 +25,8 @@ fehler = []
 
 def bauen(ziel, endpoint=None):
     env = dict(os.environ)
-    if endpoint:
-        env["HUGO_PARAMS_ANFRAGEENDPOINT"] = endpoint
+    # "ohne" wird ausdrücklich leer gebaut — seit dem Live-Gang steht im Repo ein echter Endpoint.
+    env["HUGO_PARAMS_ANFRAGEENDPOINT"] = endpoint or " "
     r = subprocess.run(["hugo", "--minify", "-d", ziel, "--quiet"], cwd=REPO, env=env, capture_output=True, text=True)
     if r.returncode != 0:
         print(r.stderr); sys.exit(1)
