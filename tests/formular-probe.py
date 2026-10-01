@@ -13,7 +13,8 @@ Baut die Seite zweimal (production) und misst am GEBAUTEN HTML:
      (tests/webmcp-lauf.cjs --bedienung, je Sprache): Einwilligung als Schalter (checkbox role=switch),
      „Anfrage senden“ gesperrt bis zur Einwilligung, mit Hinweis; „Anfragen“ auf jeder buchbaren
      Angebotskarte (Link auf #anfrage, Name enthält den sichtbaren Text) wählt das Angebot vor und
-     fokussiert die Auswahl; Ablagefläche zum Ziehen nur als Abkürzung (aria-hidden).
+     fokussiert die Auswahl; Ablagefläche zum Ziehen nur als Abkürzung (aria-hidden); „Zurücksetzen“
+     leert Felder, Schalter, Fehler und Statuszeile und sperrt den Knopf wieder.
 
   python3 tests/formular-probe.py              # muss grün werden
   python3 tests/formular-probe.py --selbsttest # baut Fehler ins HTML ein, MUSS rot werden
@@ -121,6 +122,9 @@ def bedienung_statisch(b, html, sprache):
     pruef([k[0] for k in kn] == ["schnupperstunde", "halbtag_privat", "ganztag_privat"], f"{sprache}: „Anfragen“-Knöpfe {[k[0] for k in kn]}")
     for _, aria, sichtbar in kn:
         pruef(sichtbar == t["k_anfragen"] and sichtbar.lower() in aria.lower(), f"{sprache}: Knopf-Name {aria!r} enthält den sichtbaren Text {sichtbar!r} nicht (WCAG 2.5.3)")
+    rs = [e for e in b.el if e["_tag"] == "button" and e.get("type") == "reset" and e["_imform"]]
+    pruef(len(rs) == 1, f"{sprache}: „Zurücksetzen“ fehlt im Formular")
+    pruef(re.search(r'<button type=reset[^>]*>' + re.escape(t["f_zuruecksetzen"]) + '</button>', html) is not None, f"{sprache}: „Zurücksetzen“ nicht in der Sprache der Seite")
     drop = [e for e in b.el if e.get("id") == "af-drop"]
     pruef(drop and drop[0].get("aria-hidden") == "true" and "hidden" in drop[0], f"{sprache}: Ablagefläche nicht aria-hidden/ohne Skript versteckt")
 
@@ -149,6 +153,10 @@ def bedienung_laufzeit(wurzel, sprache, js=None):
     pruef(b.get("knopf_anfangs_gesperrt") and b.get("sperrhinweis_anfangs_sichtbar"), f"{sprache}: „Anfrage senden“ ohne Einwilligung nicht gesperrt/ohne Hinweis")
     pruef(b.get("knopf_frei_nach_einwilligung") and b.get("sperrhinweis_danach_weg"), f"{sprache}: Knopf nach Einwilligung nicht frei")
     pruef(b.get("knopf_wieder_gesperrt"), f"{sprache}: Knopf nach Ausschalten nicht wieder gesperrt")
+    nr = b.get("nach_reset") or {}
+    pruef(b.get("zuruecksetzen_da") and b.get("fehler_vor_reset", 0) > 0 and nr.get("name") == "" and nr.get("message") == "" and nr.get("angebot") == ""
+          and nr.get("consent") is False and nr.get("knopf_gesperrt") is True and nr.get("fehler_sichtbar") == 0 and nr.get("status_versteckt") is True,
+          f"{sprache}: „Zurücksetzen“ lässt etwas stehen: {nr}")
     pruef(b.get("karten_knoepfe") == ["schnupperstunde", "halbtag_privat", "ganztag_privat"], f"{sprache}: Karten-Knöpfe {b.get('karten_knoepfe')}")
     pruef(b.get("karte_waehlt") == "Halbtag privat" and b.get("karte_fokus") == "af-angebot" and b.get("karte_standard_verhindert"),
           f"{sprache}: „Anfragen“ wählt nicht vor/fokussiert nicht ({b.get('karte_waehlt')}, {b.get('karte_fokus')})")
@@ -189,6 +197,11 @@ def lauf(selbsttest=False):
                 k.write_text(q.replace(alt2, "a.addEventListener('x-aus', function (e) { if (waehleAngebot(", 1))
                 vorher = len(fehler); bedienung_laufzeit(js, s, js=k)
                 if len(fehler) == vorher: verfehlt.append(f"{s}: Karten-Knopf ohne Wirkung")
+                alt3 = "alleFehlerWeg(); knopfStand();\n        if (!erfolg"
+                assert alt3 in q, "Selbsttest-Stelle 3 in anfrage.js fehlt"
+                k.write_text(q.replace(alt3, "knopfStand();\n        if (!erfolg", 1))
+                vorher = len(fehler); bedienung_laufzeit(js, s, js=k)
+                if len(fehler) == vorher: verfehlt.append(f"{s}: Zurücksetzen lässt Fehlerzeilen stehen")
             else:
                 bedienung_laufzeit(js, s)
 
@@ -205,4 +218,4 @@ if __name__ == "__main__":
         print(f"✕ Selbsttest: nur {len(fehler)} Fehler erkannt — die Probe misst nicht"); print("\n".join(fehler)); sys.exit(1)
     if fehler:
         print("✕ Formular-Probe ROT:"); print("\n".join("  - " + x for x in fehler)); sys.exit(1)
-    print("✓ Formular-Probe grün: DE/EN/NL — ohne Endpoint kein Formular; mit Endpoint Felder, Labels, Fehlerzeilen, POST, Honigtopf außen, Themenliste, Turnstile erst bei Berührung, Datenschutz, Bedienung (Schalter + Sperre, Karten-Knopf) in jsdom")
+    print("✓ Formular-Probe grün: DE/EN/NL — ohne Endpoint kein Formular; mit Endpoint Felder, Labels, Fehlerzeilen, POST, Honigtopf außen, Themenliste, Turnstile erst bei Berührung, Datenschutz, Bedienung (Schalter + Sperre, Karten-Knopf, Zurücksetzen) in jsdom")

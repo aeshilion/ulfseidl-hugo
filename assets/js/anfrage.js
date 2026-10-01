@@ -54,7 +54,15 @@
     }
     consent.addEventListener('change', knopfStand);
     // reset() löst kein change aus — Stand danach neu setzen
-    f.addEventListener('reset', function () { setTimeout(function () { alleFehlerWeg(); knopfStand(); }, 0); });
+    // „Zurücksetzen“ leert auch Fehlerzeilen und Statuszeile; nach erfolgreichem Senden bleibt die Erfolgsmeldung stehen.
+    var leerenNachErfolg = false;
+    f.addEventListener('reset', function () {
+      var erfolg = leerenNachErfolg; leerenNachErfolg = false;
+      setTimeout(function () {
+        alleFehlerWeg(); knopfStand();
+        if (!erfolg && st) { st.hidden = true; st.innerHTML = ''; }
+      }, 0);
+    });
     knopfStand();
 
     function tsLaden() {
@@ -266,7 +274,7 @@
         if (r.ok) {
           // Erst leeren, wenn ein wartender Agent seine Antwort hat.
           setTimeout(function () {
-            f.reset(); start = Date.now();
+            leerenNachErfolg = true; f.reset(); start = Date.now();
             if (window.turnstile && tsBox) { try { window.turnstile.reset(tsBox); } catch (_) {} }
           }, w.length ? 1500 : 0);
         }

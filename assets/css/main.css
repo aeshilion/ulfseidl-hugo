@@ -143,6 +143,8 @@ a.logotile:hover{box-shadow:0 3px 14px rgba(0,0,0,.35)}
 .af button{font:inherit;font-size:16px;border:0;cursor:pointer;padding:12px 26px;min-height:46px}
 .af button[disabled]{opacity:.55;cursor:not-allowed}
 .af-sperre{flex-basis:100%}
+.af button.af-zuruecksetzen{background:#fff;color:#333;border:1px solid #999;font-weight:400}
+.af button.af-zuruecksetzen:hover{background:var(--hell);color:#222}
 .af-sperre[hidden]{display:none}
 .af-status{font-size:15px;line-height:1.5;padding:12px 14px;border:1px solid #ddd;background:#fafafa}
 .af-status[hidden]{display:none}
