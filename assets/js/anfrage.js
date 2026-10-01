@@ -8,6 +8,7 @@
  * 2. Turnstile lädt erst bei der ersten Berührung des Formulars (api.js ist groß; Lighthouse).
  *    Einwilligung ist ein Schalter (role=switch); „Anfrage senden“ bleibt gesperrt, bis er an ist.
  *    „Anfragen“ auf einer Angebotskarte wählt das Angebot im Formular vor (Ziehen auf #af-drop als Abkürzung).
+ *    „Zurücksetzen“ leert auch Fehler und Status; die Nachricht lässt sich im Vollbild-Dialog schreiben.
  * 3. WebMCP über document.modelContext (Rückfall navigator.modelContext), Muster wie
  *    biz-automation eap-webmcp.js: eigene Eingabeprüfung (Chrome prüft enum/unbekannte Parameter
  *    nicht), jede Antwort mit ok, jeder Fehler mit recovery, AbortController auf pagehide.
@@ -109,6 +110,27 @@
     Array.prototype.forEach.call(document.querySelectorAll('[data-anfragen]'), function (a) {
       a.addEventListener('click', function (e) { if (waehleAngebot(a.getAttribute('data-anfragen'))) { e.preventDefault(); } });
     });
+    // ---- „Längerer Text? Im Vollbild öffnen“: großes Textfeld im <dialog>, „Übernehmen“ trägt den Text zurück
+    var vb = document.getElementById('af-vollbild'), dlg = document.getElementById('af-dialog');
+    if (vb && dlg && typeof dlg.showModal === 'function') {
+      var dt = dlg.querySelector('textarea');
+      vb.hidden = false;
+      vb.addEventListener('click', function () {
+        dt.value = el('message').value;
+        dlg.showModal();
+        dt.focus();
+        try { dt.setSelectionRange(dt.value.length, dt.value.length); } catch (_) {}
+      });
+      dlg.querySelector('[data-dialog="uebernehmen"]').addEventListener('click', function () {
+        var m = el('message');
+        m.value = dt.value;
+        m.dispatchEvent(new Event('input', { bubbles: true }));
+        dlg.close();
+      });
+      dlg.querySelector('[data-dialog="abbrechen"]').addEventListener('click', function () { dlg.close(); });
+      dlg.addEventListener('close', function () { try { vb.focus({ preventScroll: true }); } catch (_) { vb.focus(); } });
+    }
+
     var drop = document.getElementById('af-drop');
     if (drop && 'draggable' in drop && window.matchMedia && window.matchMedia('(pointer: fine)').matches) {
       drop.hidden = false;

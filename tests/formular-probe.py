@@ -14,7 +14,9 @@ Baut die Seite zweimal (production) und misst am GEBAUTEN HTML:
      „Anfrage senden“ gesperrt bis zur Einwilligung, mit Hinweis; „Anfragen“ auf jeder buchbaren
      Angebotskarte (Link auf #anfrage, Name enthält den sichtbaren Text) wählt das Angebot vor und
      fokussiert die Auswahl; Ablagefläche zum Ziehen nur als Abkürzung (aria-hidden); „Zurücksetzen“
-     leert Felder, Schalter, Fehler und Statuszeile und sperrt den Knopf wieder.
+     leert Felder, Schalter, Fehler und Statuszeile und sperrt den Knopf wieder; „Längerer Text? Im
+     Vollbild öffnen“ zeigt die Nachricht in einem <dialog> außerhalb des Formulars, „Übernehmen“ trägt sie
+     zurück, „Abbrechen“ verwirft, der Fokus kehrt zum Knopf zurück.
 
   python3 tests/formular-probe.py              # muss grün werden
   python3 tests/formular-probe.py --selbsttest # baut Fehler ins HTML ein, MUSS rot werden
@@ -110,6 +112,7 @@ def i18n(sprache):
 
 def bedienung_statisch(b, html, sprache):
     """Schalter, Karten-Knopf, Zurücksetzen, Vollbild am gebauten HTML."""
+    ids = {e.get("id") for e in b.el if e.get("id")}
     c = [e for e in b.el if e.get("id") == "af-consent"]
     pruef(c and c[0].get("type") == "checkbox" and c[0].get("role") == "switch" and "required" in c[0],
           f"{sprache}: Einwilligung nicht als checkbox role=switch required")
@@ -125,6 +128,17 @@ def bedienung_statisch(b, html, sprache):
     rs = [e for e in b.el if e["_tag"] == "button" and e.get("type") == "reset" and e["_imform"]]
     pruef(len(rs) == 1, f"{sprache}: „Zurücksetzen“ fehlt im Formular")
     pruef(re.search(r'<button type=reset[^>]*>' + re.escape(t["f_zuruecksetzen"]) + '</button>', html) is not None, f"{sprache}: „Zurücksetzen“ nicht in der Sprache der Seite")
+    vb = [e for e in b.el if e.get("id") == "af-vollbild"]
+    pruef(vb and vb[0]["_imform"] and vb[0].get("type") == "button" and vb[0].get("aria-haspopup") == "dialog" and "hidden" in vb[0],
+          f"{sprache}: Vollbild-Knopf fehlt / nicht type=button aria-haspopup=dialog / ohne Skript sichtbar")
+    pruef(re.search(r'id=af-vollbild[^>]*>' + re.escape(t["f_vollbild"]) + "<", html) is not None, f"{sprache}: Vollbild-Knopf nicht in der Sprache der Seite")
+    dl = [e for e in b.el if e.get("id") == "af-dialog"]
+    pruef(dl and dl[0]["_tag"] == "dialog" and not dl[0]["_imform"] and dl[0].get("aria-labelledby") in ids,
+          f"{sprache}: Dialog fehlt, steht im Formular oder hat keinen Titel")
+    dtx = [e for e in b.el if e.get("id") == "af-dialog-text"]
+    pruef(dtx and not dtx[0]["_imform"] and dtx[0].get("aria-labelledby") in ids and "name" not in dtx[0], f"{sprache}: Dialog-Textfeld ohne Beschriftung oder mit name (würde gesendet)")
+    for k in ("d_uebernehmen", "d_abbrechen"):
+        pruef(re.search(r'data-dialog=\w+>' + re.escape(t[k]) + "</button>", html) is not None, f"{sprache}: Dialog-Knopf {t[k]!r} fehlt")
     drop = [e for e in b.el if e.get("id") == "af-drop"]
     pruef(drop and drop[0].get("aria-hidden") == "true" and "hidden" in drop[0], f"{sprache}: Ablagefläche nicht aria-hidden/ohne Skript versteckt")
 
@@ -157,6 +171,10 @@ def bedienung_laufzeit(wurzel, sprache, js=None):
     pruef(b.get("zuruecksetzen_da") and b.get("fehler_vor_reset", 0) > 0 and nr.get("name") == "" and nr.get("message") == "" and nr.get("angebot") == ""
           and nr.get("consent") is False and nr.get("knopf_gesperrt") is True and nr.get("fehler_sichtbar") == 0 and nr.get("status_versteckt") is True,
           f"{sprache}: „Zurücksetzen“ lässt etwas stehen: {nr}")
+    pruef(b.get("vollbild_da") and b.get("vollbild_knopf_sichtbar") and b.get("dialog_offen") and b.get("dialog_uebernimmt_text") and b.get("dialog_fokus"),
+          f"{sprache}: Vollbild öffnet nicht richtig: { {k: b.get(k) for k in ('vollbild_knopf_sichtbar', 'dialog_offen', 'dialog_uebernimmt_text', 'dialog_fokus')} }")
+    pruef(b.get("zurueck_im_feld") and b.get("dialog_zu") and b.get("fokus_zurueck") and b.get("abbrechen_verwirft"),
+          f"{sprache}: Vollbild trägt nicht zurück / Fokus / Abbrechen: { {k: b.get(k) for k in ('zurueck_im_feld', 'dialog_zu', 'fokus_zurueck', 'abbrechen_verwirft')} }")
     pruef(b.get("karten_knoepfe") == ["schnupperstunde", "halbtag_privat", "ganztag_privat"], f"{sprache}: Karten-Knöpfe {b.get('karten_knoepfe')}")
     pruef(b.get("karte_waehlt") == "Halbtag privat" and b.get("karte_fokus") == "af-angebot" and b.get("karte_standard_verhindert"),
           f"{sprache}: „Anfragen“ wählt nicht vor/fokussiert nicht ({b.get('karte_waehlt')}, {b.get('karte_fokus')})")
@@ -202,6 +220,11 @@ def lauf(selbsttest=False):
                 k.write_text(q.replace(alt3, "knopfStand();\n        if (!erfolg", 1))
                 vorher = len(fehler); bedienung_laufzeit(js, s, js=k)
                 if len(fehler) == vorher: verfehlt.append(f"{s}: Zurücksetzen lässt Fehlerzeilen stehen")
+                alt4 = "m.value = dt.value;"
+                assert alt4 in q, "Selbsttest-Stelle 4 in anfrage.js fehlt"
+                k.write_text(q.replace(alt4, "", 1))
+                vorher = len(fehler); bedienung_laufzeit(js, s, js=k)
+                if len(fehler) == vorher: verfehlt.append(f"{s}: Vollbild trägt nicht zurück")
             else:
                 bedienung_laufzeit(js, s)
 
@@ -218,4 +241,4 @@ if __name__ == "__main__":
         print(f"✕ Selbsttest: nur {len(fehler)} Fehler erkannt — die Probe misst nicht"); print("\n".join(fehler)); sys.exit(1)
     if fehler:
         print("✕ Formular-Probe ROT:"); print("\n".join("  - " + x for x in fehler)); sys.exit(1)
-    print("✓ Formular-Probe grün: DE/EN/NL — ohne Endpoint kein Formular; mit Endpoint Felder, Labels, Fehlerzeilen, POST, Honigtopf außen, Themenliste, Turnstile erst bei Berührung, Datenschutz, Bedienung (Schalter + Sperre, Karten-Knopf, Zurücksetzen) in jsdom")
+    print("✓ Formular-Probe grün: DE/EN/NL — ohne Endpoint kein Formular; mit Endpoint Felder, Labels, Fehlerzeilen, POST, Honigtopf außen, Themenliste, Turnstile erst bei Berührung, Datenschutz, Bedienung (Schalter + Sperre, Karten-Knopf, Zurücksetzen, Vollbild) in jsdom")

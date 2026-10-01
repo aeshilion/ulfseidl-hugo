@@ -86,6 +86,7 @@
     <div class="af-feld af-voll">
       <label for="af-nachricht">{{ i18n "f_nachricht" }} <small>({{ i18n "f_optional" }})</small></label>
       <textarea id="af-nachricht" name="message" maxlength="4000" rows="4" placeholder="{{ i18n "f_nachricht_ph" }}"></textarea>
+      <button type="button" class="af-link" id="af-vollbild" aria-haspopup="dialog" aria-controls="af-dialog" hidden>{{ i18n "f_vollbild" }}</button>
     </div>
     <div class="af-feld af-voll af-einw">
       <input id="af-consent" name="consent" type="checkbox" role="switch" required aria-describedby="af-consent-fehler">
@@ -103,6 +104,16 @@
     </div>
     <div id="anfrage-status" class="af-status af-voll" role="status" aria-live="polite" tabindex="-1" hidden></div>
   </form>
+  {{- /* Nachricht im Vollbild: außerhalb des Formulars (kein zweites Feld im Formular, nichts doppelt gesendet).
+         Nur mit Skript sichtbar; <dialog> + showModal hält den Fokus im Dialog, Esc bricht ab. */}}
+  <dialog class="af-dialog" id="af-dialog" aria-labelledby="af-dialog-titel">
+    <h3 id="af-dialog-titel">{{ i18n "d_titel" }}</h3>
+    <textarea id="af-dialog-text" maxlength="4000" aria-labelledby="af-dialog-titel" placeholder="{{ i18n "f_nachricht_ph" }}"></textarea>
+    <div class="af-dialog-fuss">
+      <button type="button" class="btn primary" data-dialog="uebernehmen">{{ i18n "d_uebernehmen" }}</button>
+      <button type="button" class="btn" data-dialog="abbrechen">{{ i18n "d_abbrechen" }}</button>
+    </div>
+  </dialog>
   <div class="af-hp" aria-hidden="true"><label>{{ i18n "f_honig" }}<input type="text" id="anfrage-hp" name="website" tabindex="-1" autocomplete="off"></label></div>
 </section>
 {{- end -}}
