@@ -6,7 +6,8 @@
  * ({url, werkzeuge:[{name, description, inputSchema, annotations, aufrufe:[{art, args, antwort}]}]})
  * plus eigene Prüfwerte unter "lauf" (Rückfall navigator.modelContext, pagehide, Anfrage-Ablauf).
  *
- *   node tests/webmcp-lauf.cjs <gebaut>/index.html <gebaut-wurzel> [--navigator]
+ *   node tests/webmcp-lauf.cjs <gebaut>/index.html <gebaut-wurzel> [--navigator] [--js=<skript>]
+ * --js ersetzt das ausgelieferte Skript (Selbsttest: absichtlich kaputte Fassung von assets/js/anfrage.js).
  * jsdom wird über NODE_PATH gefunden (tests/webmcp-probe.py sucht es); ohne jsdom Exit 3.
  */
 'use strict';
@@ -20,7 +21,8 @@ const ueberNavigator = process.argv.includes('--navigator');
 const html = fs.readFileSync(htmlPfad, 'utf8');
 const src = (html.match(/<script src=([^ >]+anfrage\.min\.[0-9a-f]+\.js)/) || [])[1];
 if (!src) { console.error('anfrage.js nicht eingebunden'); process.exit(2); }
-const js = fs.readFileSync(path.join(wurzel, src.replace(/^"|"$/g, '')), 'utf8');
+const jsArg = process.argv.find(a => a.startsWith('--js='));
+const js = fs.readFileSync(jsArg ? jsArg.slice(5) : path.join(wurzel, src.replace(/^"|"$/g, '')), 'utf8');
 
 const url = 'https://ersteschischule.at/';
 const dom = new JSDOM(html.replace(/<script src=[^>]+anfrage\.min[^>]+><\/script>/, ''), { url, runScripts: 'outside-only', pretendToBeVisual: true });
@@ -59,13 +61,16 @@ function plan(t) {
   return p;
 }
 
+// Jeder Aufruf mit Frist: ein Werkzeug, das auf den Menschen wartet, wo es ablehnen sollte, hängt sonst den Lauf.
+const frist = (p, ms) => Promise.race([p, new Promise(r => setTimeout(() => r({ __frist: ms }), ms))]);
+
 (async () => {
   const werkzeuge = [];
   for (const t of angemeldet) {
     const r = { name: t.name, title: t.title, description: t.description, inputSchema: t.inputSchema, annotations: t.annotations, aufrufe: [] };
     if (t.name !== 'privatstunde_anfragen') {
       for (const a of plan(t)) {
-        try { r.aufrufe.push({ art: a.art, args: a.args, antwort: await t.execute(a.args, {}) }); }
+        try { r.aufrufe.push({ art: a.art, args: a.args, antwort: await frist(t.execute(a.args, {}), 3000) }); }
         catch (e) { r.aufrufe.push({ art: a.art, args: a.args, ausnahme: String(e) }); }
       }
     }
@@ -79,8 +84,8 @@ function plan(t) {
   if (t) {
     anfrage.vorhanden = true;
     const basis = { name: 'Erika Muster', email: 'erika@example.test', wunschtermin: '14.-16. Februar 2027', angebot: 'halbtag_privat', personen: 2, niveau: 'anfaenger', einwilligung: true };
-    anfrage.ohne_einwilligung = await t.execute(Object.assign({}, basis, { einwilligung: false }), {});
-    anfrage.unbekannt = await t.execute(Object.assign({}, basis, { rabatt: 1 }), {});
+    anfrage.ohne_einwilligung = await frist(t.execute(Object.assign({}, basis, { einwilligung: false }), {}), 3000);
+    anfrage.unbekannt = await frist(t.execute(Object.assign({}, basis, { rabatt: 1 }), {}), 3000);
     let fertig = null;
     const laeuft = t.execute(basis, {}).then(x => { fertig = x; });
     await new Promise(r => setTimeout(r, 50));

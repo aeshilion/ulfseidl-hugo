@@ -166,8 +166,8 @@ werkzeuge:
     description: >-
       Bereitet eine Anfrage fuer eine private Skistunde bei Ulf Seidl in Flachau vor: fuellt das Anfrageformular auf
       ersteschischule.at aus, damit die Person es pruefen kann. GESENDET wird erst, wenn die Person selbst auf "Anfrage
-      senden" drueckt; das Ergebnis dieses Absendens ist die Antwort des Werkzeugs (ok true = Anfrage angekommen, ok false
-      mit error und recovery). Fragen Sie vorher nach dem echten Namen, nach E-Mail-Adresse oder Telefonnummer (mindestens
+      senden" drueckt. Liefert das Ergebnis dieses Absendens zurueck (ok true und gesendet true = Anfrage angekommen,
+      ok false mit error und recovery). Fragen Sie vorher nach dem echten Namen, nach E-Mail-Adresse oder Telefonnummer (mindestens
       eines), Wunschtermin, Angebot, Personenzahl und Koennen; setzen Sie einwilligung nur auf true, wenn die Person der
       Datenschutzerklaerung zugestimmt hat, und erfinden Sie keine Angaben. Preise vorher mit list_angebote oder
       get_preise_und_bedingungen holen. Es wird nichts verbindlich gebucht; Ulf meldet sich persoenlich.
