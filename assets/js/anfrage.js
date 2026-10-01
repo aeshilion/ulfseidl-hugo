@@ -9,7 +9,11 @@
  * 3. WebMCP über document.modelContext (Rückfall navigator.modelContext), Muster wie
  *    biz-automation eap-webmcp.js: eigene Eingabeprüfung (Chrome prüft enum/unbekannte Parameter
  *    nicht), jede Antwort mit ok, jeder Fehler mit recovery, AbortController auf pagehide.
- *    - angebote_abfragen (nur lesen): Angebote und Preise aus den Karten der Seite.
+ *    Werkzeuge und Inhalte kommen aus dem eingebetteten Katalog #ulf-katalog (data/webmcp.yaml +
+ *    data/ulf.yaml über layouts/partials/katalog.html) — dieselbe Quelle wie Seite, /webmcp.json, /llms.txt.
+ *    - Lesewerkzeuge (list_angebote, get_angebot, get_preise_und_bedingungen, list_faqs, suche_website,
+ *      get_treffpunkt_und_anfahrt, get_saison, get_kontakt, list_qualifikationen, get_impressum,
+ *      get_datenschutz, list_stimmen nur mit echten Stimmen).
  *    - privatstunde_anfragen: füllt das Formular aus; GESENDET wird erst, wenn der Mensch
  *      „Anfrage senden“ drückt. Das Ergebnis dieses Absendens geht an den Agenten zurück.
  */
@@ -215,7 +219,8 @@
     });
 
     return {
-      el: el, pruefen: pruefen, fehlerZeigen: fehlerZeigen, alleFehlerWeg: alleFehlerWeg, zeige: zeige, tsLaden: tsLaden,
+      el: el, pruefen: pruefen,
+      setzeEinwilligung: function (v) { var c = el('consent'); c.checked = v === true; c.dispatchEvent(new Event('change', { bubbles: true })); }, fehlerZeigen: fehlerZeigen, alleFehlerWeg: alleFehlerWeg, zeige: zeige, tsLaden: tsLaden,
       /** Promise auf das nächste Absenden durch den Menschen. */
       warteAufAbsenden: function () { return new Promise(function (ok) { wartende.push(ok); }); },
       knopf: knopf
@@ -271,82 +276,119 @@
     return { args: a };
   }
 
-  /** Angebote aus den Karten der Seite (Mensch und Agent sehen dieselbe Quelle). */
-  function angeboteVonSeite() {
-    var karten = document.querySelectorAll('#angebote .card[data-angebot]');
-    var out = [];
-    for (var i = 0; i < karten.length; i++) {
-      var k = karten[i];
-      var txt = function (sel) { var x = k.querySelector(sel); return x ? x.textContent.trim() : ''; };
-      out.push({
-        id: k.getAttribute('data-angebot'),
-        name: txt('h3'), dauer: txt('.duration'), preis: txt('.price'),
-        preis_eur: Number(k.getAttribute('data-preis-eur')),
-        art: k.hasAttribute('data-zuschlag') ? 'Aufpreis je weitere Person' : 'Privatstunde',
-        beschreibung: txt('p:last-child')
-      });
-    }
-    return out;
-  }
+  // ------------------------------------------------------------ Katalog (data/ulf.yaml + data/webmcp.yaml)
+  // Hugo bettet ihn ein (layouts/partials/katalog.html); dieselben Daten bauen /webmcp.json und /llms.txt.
+  // Fail-closed: ohne gültigen Katalog wird KEIN Werkzeug angemeldet (lieber keins als ein halber Satz).
+  var KAT = null, DEFS = [];
+  try {
+    var kEl = document.getElementById('ulf-katalog');
+    var roh = kEl ? JSON.parse(kEl.textContent) : null;
+    if (roh && roh.katalog && Array.isArray(roh.werkzeuge)) { KAT = roh.katalog; DEFS = roh.werkzeuge; }
+  } catch (e) { KAT = null; }
+  if (!KAT) { console.error('[anfrage-webmcp] Katalog fehlt oder ist kein JSON; keine Werkzeuge angemeldet.'); return; }
 
-  var NEXT_ANFRAGE = formular ? ['privatstunde_anfragen mit Name, E-Mail oder Telefon, Wunschtermin, Angebot (id), Personen, Koennen und Einwilligung aufrufen; gesendet wird erst, wenn die Person selbst auf den Knopf drueckt.']
+  function kopie(o) { return JSON.parse(JSON.stringify(o)); }
+  /** Für Suche: klein, ASCII, nur Buchstaben/Ziffern. */
+  function norm(s) { return String(ascii(String(s || ''))).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
+  var SYNONYME = { kost: 'eur', preis: 'eur', teuer: 'eur', euro: 'eur', price: 'eur', geld: 'eur', bezahl: 'zahlung',
+                   wann: 'saison', monat: 'saison', wo: 'treffpunkt', treff: 'treffpunkt', ort: 'flachau',
+                   kind: 'kinder', sprach: 'deutsch', englisch: 'englisch', gruppe: 'personen', familie: 'personen' };
+  /** Suchwörter → Stämme (erste 5 Buchstaben), dazu Synonyme. Wörter unter 3 Zeichen fallen weg. */
+  function staemme(q) {
+    var out = [];
+    norm(q).split(' ').forEach(function (w) {
+      if (w.length < 3 && w !== 'wo') { return; }
+      out.push(w.slice(0, 5));
+      Object.keys(SYNONYME).forEach(function (k) { if (w.indexOf(k) === 0) { out.push(SYNONYME[k].slice(0, 5)); } });
+    });
+    return out.filter(function (x, i) { return out.indexOf(x) === i; });
+  }
+  function treffer(text, st) {
+    var woerter = norm(text).split(' ');
+    return st.filter(function (s) { return woerter.some(function (w) { return w.indexOf(s) === 0; }); }).length;
+  }
+  function offenHinweis() { return (KAT.offen_bei_ulf && KAT.offen_bei_ulf.hinweis) || ''; }
+
+  var NEXT_ANFRAGE = formular
+    ? ['privatstunde_anfragen mit Name, E-Mail oder Telefon, Wunschtermin, Angebot (id), Personen, Koennen und Einwilligung aufrufen; gesendet wird erst, wenn die Person selbst auf den Knopf drueckt.',
+       'Oder direkt anrufen bzw. per WhatsApp schreiben: ' + (CFG.telefon || '') + '.']
     : ['Anfragen direkt telefonisch oder per WhatsApp an ' + (CFG.telefon || '') + '.'];
 
-  var WERKZEUGE = [];
-
-  WERKZEUGE.push({
-    name: 'angebote_abfragen',
-    title: 'Angebote und Preise abfragen',
-    description: 'Liefert die Privatstunden-Angebote von Ulf Seidl (staatlich gepruefter Skilehrer in Flachau, Snow Space Salzburg) mit Dauer und Preis, so wie sie auf ersteschischule.at stehen, dazu den Aufpreis je weiterer Person (bis 4 Personen), die Saison und den direkten Kontakt. Nur lesen, bucht nichts.',
-    inputSchema: { type: 'object', properties: {}, additionalProperties: false },
-    annotations: { readOnlyHint: true },
-    ausfuehren: function () {
-      var a = angeboteVonSeite();
-      if (!a.length) { return Promise.resolve({ error: 'Auf dieser Seite stehen keine Angebote.', recovery: 'Die Startseite ' + location.origin + '/ aufrufen.' }); }
-      var note = document.querySelector('#angebote .note');
-      return Promise.resolve({
-        anbieter: 'Ulf Seidl, Privat-Skilehrer, Flachau (Salzburg, Oesterreich)',
-        waehrung: 'EUR',
-        angebote: a,
-        personen_max: 4,
-        hinweis: (note ? note.textContent.trim() + '. ' : '') + 'Preise laut Website; der Aufpreis gilt je weiterer Person auf aehnlichem Niveau.',
-        kontakt: { telefon: CFG.telefon, whatsapp: 'https://wa.me/' + (CFG.whatsapp || ''), seite: location.origin + '/' },
-        nextSteps: NEXT_ANFRAGE
-      });
+  /** Antwort je Werkzeug. Lesewerkzeuge geben eine KOPIE aus dem Katalog zurück. */
+  var LESEN = {
+    get_angebot: function (a) {
+      var liste = KAT.angebote.angebote, e = null;
+      for (var i = 0; i < liste.length; i++) { if (liste[i].id === a.id) { e = liste[i]; } }
+      if (!e) { return { error: 'Unbekannte id: ' + JSON.stringify(a.id) + '.', validValues: liste.map(function (x) { return x.id; }) }; }
+      return {
+        angebot: kopie(e), waehrung: KAT.angebote.waehrung, personen_max: KAT.angebote.personen_max,
+        aufpreis_je_weitere_person_eur: KAT.preise_und_bedingungen.aufpreis_je_weitere_person_eur,
+        saison: KAT.saison.zeitraum, treffpunkt: KAT.treffpunkt.treffpunkt
+      };
+    },
+    list_faqs: function (a) {
+      var alle = KAT.faqs.faqs;
+      if (!a.suchbegriff || !String(a.suchbegriff).trim()) { return { anzahl: alle.length, faqs: kopie(alle) }; }
+      var st = staemme(a.suchbegriff);
+      var hits = alle.filter(function (f) { return treffer(f.frage + ' ' + f.antwort, st) > 0; });
+      return { suchbegriff: a.suchbegriff, anzahl: hits.length, faqs: kopie(hits),
+               hinweis: hits.length ? undefined : 'Keine passende Frage. Ohne suchbegriff kommen alle ' + alle.length + ' Fragen. ' + offenHinweis() };
+    },
+    suche_website: function (a) {
+      var st = staemme(a.suchbegriff);
+      var kandidaten = [];
+      KAT.faqs.faqs.forEach(function (f) { kandidaten.push({ bereich: 'Haeufige Frage', titel: f.frage, text: f.antwort, werkzeug: 'list_faqs' }); });
+      KAT.angebote.angebote.forEach(function (x) { kandidaten.push({ bereich: 'Angebot', titel: x.name, text: x.dauer + ', ' + x.preis_text + ' (' + x.preis_eur + ' EUR). ' + x.beschreibung, werkzeug: 'get_angebot', id: x.id }); });
+      (KAT.preise_und_bedingungen.ablauf || []).forEach(function (t) { kandidaten.push({ bereich: 'Ablauf', titel: 'Ablauf', text: t, werkzeug: 'get_preise_und_bedingungen' }); });
+      var r = KAT.preise_und_bedingungen.regeln || {};
+      Object.keys(r).forEach(function (k) { kandidaten.push({ bereich: 'Bedingungen', titel: k, text: r[k], werkzeug: 'get_preise_und_bedingungen' }); });
+      KAT.qualifikationen.qualifikationen.forEach(function (q) { kandidaten.push({ bereich: 'Qualifikation', titel: q.bezeichnung, text: q.bezeichnung + ' (' + q.nachweis + ')', werkzeug: 'list_qualifikationen' }); });
+      kandidaten.push({ bereich: 'Saison', titel: 'Saison', text: 'Saison ' + KAT.saison.zeitraum + '. ' + KAT.saison.kurzfristig, werkzeug: 'get_saison' });
+      kandidaten.push({ bereich: 'Treffpunkt', titel: 'Treffpunkt', text: KAT.treffpunkt.treffpunkt + ' (' + KAT.treffpunkt.gebiet.join(', ') + '). ' + KAT.treffpunkt.hinweis, werkzeug: 'get_treffpunkt_und_anfahrt' });
+      kandidaten.push({ bereich: 'Kontakt', titel: 'Kontakt', text: 'Telefon und WhatsApp ' + KAT.kontakt.telefon + ', E-Mail ' + KAT.kontakt.email + '. ' + KAT.kontakt.hinweis, werkzeug: 'get_kontakt' });
+      var hits = kandidaten.map(function (k) { return { k: k, n: treffer(k.titel + ' ' + k.text, st) }; })
+        .filter(function (x) { return x.n > 0; })
+        .sort(function (x, y) { return y.n - x.n; })
+        .slice(0, 8).map(function (x) { return x.k; });
+      var out = { suchbegriff: a.suchbegriff, anzahl: hits.length, treffer: hits };
+      if (!hits.length) { out.hinweis = 'Dazu steht nichts auf ersteschischule.at. ' + offenHinweis(); out.offen_bei_ulf = kopie(KAT.offen_bei_ulf.themen); }
+      return out;
     }
+  };
+
+  var WERKZEUGE = [];
+  DEFS.forEach(function (d) {
+    if (d.name === 'privatstunde_anfragen') { return; }   // unten, braucht das Formular
+    var w = { name: d.name, title: d.title, description: d.description, inputSchema: d.inputSchema, annotations: d.annotations };
+    if (LESEN[d.name]) {
+      w.ausfuehren = function (a) { var r = LESEN[d.name](a); if (!r.error) { r.nextSteps = NEXT_ANFRAGE; } return Promise.resolve(r); };
+    } else if (d.quelle && KAT[d.quelle]) {
+      w.ausfuehren = function () { var r = kopie(KAT[d.quelle]); r.nextSteps = NEXT_ANFRAGE; return Promise.resolve(r); };
+    } else {
+      console.error('[anfrage-webmcp] Werkzeug ohne Quelle im Katalog: ' + d.name);
+      return;
+    }
+    WERKZEUGE.push(w);
   });
 
-  if (formular) {
-    var ANGEBOTE = [], ANGEBOT_WERT = {};
-    Array.prototype.forEach.call(formular.el('angebot').options, function (o) { var id = o.getAttribute('data-id'); if (id) { ANGEBOTE.push(id); ANGEBOT_WERT[id] = o.value; } });
-    var NIVEAUS = [], NIVEAU_WERT = {};
-    Array.prototype.forEach.call(formular.el('niveau').options, function (o) { var id = o.getAttribute('data-id'); if (id) { NIVEAUS.push(id); NIVEAU_WERT[id] = o.value; } });
+  var defAnfrage = null;
+  DEFS.forEach(function (d) { if (d.name === 'privatstunde_anfragen') { defAnfrage = d; } });
+  if (formular && defAnfrage) {
+    // id → Formularwert aus den <option data-id> (gebaut aus derselben data/ulf.yaml)
+    var ANGEBOT_WERT = {}, NIVEAU_WERT = {};
+    Array.prototype.forEach.call(formular.el('angebot').options, function (o) { var id = o.getAttribute('data-id'); if (id) { ANGEBOT_WERT[id] = o.value; } });
+    Array.prototype.forEach.call(formular.el('niveau').options, function (o) { var id = o.getAttribute('data-id'); if (id) { NIVEAU_WERT[id] = o.value; } });
     var WARTEZEIT_MS = 10 * 60 * 1000;
 
     WERKZEUGE.push({
-      name: 'privatstunde_anfragen',
-      title: 'Privatstunde bei Ulf Seidl anfragen',
-      description: 'Bereitet eine Anfrage fuer eine private Skistunde bei Ulf Seidl in Flachau vor: fuellt das Anfrageformular auf ersteschischule.at aus, damit die Person es pruefen kann. GESENDET wird erst, wenn die Person selbst auf "Anfrage senden" drueckt; das Ergebnis dieses Absendens ist die Antwort des Werkzeugs (ok true = Anfrage angekommen, ok false mit error und recovery). Fragen Sie vorher nach dem echten Namen, nach E-Mail-Adresse oder Telefonnummer (mindestens eines), Wunschtermin, Angebot, Personenzahl und Koennen; setzen Sie einwilligung nur auf true, wenn die Person der Datenschutzerklaerung zugestimmt hat, und erfinden Sie keine Angaben. Preise vorher mit angebote_abfragen holen. Es wird nichts verbindlich gebucht; Ulf meldet sich persoenlich.',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          name: { type: 'string', minLength: 2, maxLength: 120, description: 'Vor- und Nachname der anfragenden Person.' },
-          email: { type: 'string', maxLength: 160, description: 'E-Mail-Adresse fuer die Antwort und die Bestaetigung. E-Mail oder telefon, mindestens eines.' },
-          telefon: { type: 'string', maxLength: 40, description: 'Telefon- oder WhatsApp-Nummer, nur Ziffern, Leerzeichen und + ( ) / -, mindestens 6 Ziffern. E-Mail oder telefon, mindestens eines.' },
-          wunschtermin: { type: 'string', minLength: 2, maxLength: 120, description: 'Wunschtermin oder Zeitraum in eigenen Worten, z. B. "14.-16. Februar 2027, vormittags".' },
-          angebot: { type: 'string', enum: ANGEBOTE, description: 'Gewuenschtes Angebot: schnupperstunde (55 min), halbtag_privat (3 h), ganztag_privat (bis 6 h) oder noch_offen.' },
-          personen: { type: 'integer', minimum: 1, maximum: 4, description: 'Anzahl der Personen, 1 bis 4 (jede weitere Person mit Aufpreis).' },
-          niveau: { type: 'string', enum: NIVEAUS, description: 'Koennen: anfaenger, fortgeschritten oder koenner.' },
-          nachricht: { type: 'string', maxLength: 4000, description: 'Optional: Alter der Kinder, Wuensche, Fragen. Nichts erfinden.' },
-          einwilligung: { type: 'boolean', description: 'true nur, wenn die Person der Verarbeitung laut Datenschutzerklaerung (' + location.origin + (CFG.datenschutz || '/datenschutz/') + ') zugestimmt hat.' }
-        },
-        required: ['name', 'wunschtermin', 'angebot', 'personen', 'niveau', 'einwilligung'],
-        additionalProperties: false
-      },
-      annotations: { readOnlyHint: false },
+      name: defAnfrage.name, title: defAnfrage.title, description: defAnfrage.description,
+      inputSchema: defAnfrage.inputSchema, annotations: defAnfrage.annotations,
       ausfuehren: function (a, client) {
         if (a.einwilligung !== true) {
           return Promise.resolve({ error: 'Ohne Einwilligung in die Datenschutzerklaerung wird keine Anfrage vorbereitet.', recovery: 'Die Person fragen, ob sie zustimmt (Datenschutzerklaerung: ' + location.origin + (CFG.datenschutz || '/datenschutz/') + ').' });
+        }
+        if (ANGEBOT_WERT[a.angebot] === undefined || NIVEAU_WERT[a.niveau] === undefined) {
+          return Promise.resolve({ error: 'Angebot oder Koennen passt nicht zum Formular auf dieser Seite.', validValues: { angebot: Object.keys(ANGEBOT_WERT), niveau: Object.keys(NIVEAU_WERT) } });
         }
         var email = String(a.email || '').trim(), tel = String(a.telefon || '').trim();
         if (!email && !tel) { return Promise.resolve({ error: 'E-Mail oder telefon fehlt (mindestens eines).', validParameters: ['email', 'telefon'] }); }
@@ -361,7 +403,7 @@
         setze('personen', String(a.personen));
         setze('niveau', NIVEAU_WERT[a.niveau]);
         setze('message', String(a.nachricht || ''));
-        formular.el('consent').checked = true;
+        formular.setzeEinwilligung(true);
         formular.alleFehlerWeg();
         formular.tsLaden();
         var rest = formular.pruefen();
@@ -393,16 +435,21 @@
     });
   }
 
+  // Erst vollständig bauen, dann anmelden; doppelte Namen = Fehler im Katalog → gar nichts anmelden.
+  var namen = WERKZEUGE.map(function (w) { return w.name; });
+  if (namen.some(function (n, i) { return namen.indexOf(n) !== i; })) { console.error('[anfrage-webmcp] Werkzeugname doppelt; keine Werkzeuge angemeldet.'); return; }
+
   WERKZEUGE.forEach(function (w) {
     var tool = {
       name: w.name, title: w.title, description: w.description, inputSchema: w.inputSchema, annotations: w.annotations,
       execute: function (input, client) {
         var g = pruefeSchema(w.inputSchema, input);
-        var lauf = g.fehler ? Promise.resolve(g.fehler) : w.ausfuehren(g.args, client);
+        var lauf;
+        try { lauf = g.fehler ? Promise.resolve(g.fehler) : w.ausfuehren(g.args, client); } catch (e) { lauf = Promise.reject(e); }
         return lauf.then(function (out) {
           if (out && out.error) { out.ok = false; if (out.recovery === undefined) { out.recovery = 'Direkt anfragen: Telefon/WhatsApp ' + (CFG.telefon || '') + '.'; } }
           else { out = Object.assign({ ok: true }, out); }
-          return ascii(out);
+          return ascii(JSON.parse(JSON.stringify(out)));
         }, function (e) {
           return ascii({ ok: false, error: 'Fehler: ' + ((e && e.message) || e), recovery: 'Direkt anfragen: Telefon/WhatsApp ' + (CFG.telefon || '') + '.' });
         });

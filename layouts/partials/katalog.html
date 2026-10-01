@@ -1,0 +1,129 @@
+{{- /*
+  Katalog für Agenten — gebaut aus data/ulf.yaml (Inhalte) und data/webmcp.yaml (Werkzeuge).
+  Rückgabe: dict { katalog, werkzeuge }. Verwendet von
+    layouts/index.html            eingebettet als <script type="application/json" id="ulf-katalog">
+    layouts/index.webmcp.json     /webmcp.json
+    layouts/index.llms.txt        /llms.txt
+  Antworten deutsch. Leere Felder aus ulf.yaml (TODO Ulf) erscheinen nicht, sondern als offen_bei_ulf.
+  Aufruf: partial "katalog.html" (dict "mitFormular" true|false)
+*/ -}}
+{{- $d := hugo.Data.ulf -}}
+{{- $p := site.Params -}}
+{{- $web := strings.TrimSuffix "/" site.BaseURL | printf "%s/" -}}
+{{- $mitFormular := .mitFormular -}}
+{{- $a := $d.anbieter.adresse -}}
+{{- $adresseText := printf "%s, %s %s, %s" $a.strasse $a.plz $a.ort $a.land -}}
+
+{{- /* offen bei Ulf: Thema, solange das Feld (Pfad) leer ist */ -}}
+{{- $offen := slice -}}
+{{- range $d.offen_bei_ulf -}}
+  {{- $teile := split .feld "." -}}
+  {{- $w := index $d (index $teile 0) (index $teile 1) -}}
+  {{- if not $w }}{{ $offen = $offen | append .thema }}{{ end -}}
+{{- end -}}
+{{- $offenHinweis := printf "Bitte direkt bei Ulf erfragen: Telefon/WhatsApp %s oder %s." $p.phone $p.email -}}
+
+{{- /* Angebote */ -}}
+{{- $angebote := slice -}}
+{{- $angebotIds := slice -}}
+{{- $anfrageIds := slice -}}
+{{- range $d.angebote -}}
+  {{- $e := dict
+      "id" .id
+      "name" .name.de
+      "namen" .name
+      "art" (cond (eq .zuschlag true) "Aufpreis je weitere Person" "Privatstunde")
+      "dauer" .dauer.de
+      "preis_eur" .preis_eur
+      "preis_text" (partial "preis.html" . | plainify | htmlUnescape)
+      "beschreibung" .text.de
+  -}}
+  {{- with .dauer_minuten }}{{ $e = merge $e (dict "dauer_minuten" .) }}{{ end -}}
+  {{- with .dauer_minuten_bis }}{{ $e = merge $e (dict "dauer_minuten_hoechstens" .) }}{{ end -}}
+  {{- if not .zuschlag }}{{ $e = merge $e (dict "formularwert" .wert) }}{{ $anfrageIds = $anfrageIds | append .id }}{{ end -}}
+  {{- $angebote = $angebote | append $e -}}
+  {{- $angebotIds = $angebotIds | append .id -}}
+{{- end -}}
+{{- $anfrageIds = $anfrageIds | append "noch_offen" -}}
+{{- $zuschlag := index (where $d.angebote "zuschlag" true) 0 -}}
+
+{{- $saisonText := strings.TrimPrefix "Saison " $d.saison.text.de -}}
+{{- $saison := dict "zeitraum" $saisonText "von_monat" $d.saison.von_monat "bis_monat" $d.saison.bis_monat "kurzfristig" $d.saison.kurzfristig
+     "schnellster_weg" (printf "Telefon oder WhatsApp %s" $p.phone) -}}
+{{- with $d.saison.genaue_daten }}{{ $saison = merge $saison (dict "genaue_daten" .) }}{{ end -}}
+
+{{- $treff := dict "treffpunkt" $d.treffpunkt.text.de "gebiet" $d.treffpunkt.gebiet "hinweis" $d.treffpunkt.hinweis_adresse -}}
+{{- with $d.treffpunkt.anfahrt }}{{ $treff = merge $treff (dict "anfahrt" .) }}{{ end -}}
+{{- with $d.treffpunkt.parken }}{{ $treff = merge $treff (dict "parken" .) }}{{ end -}}
+{{- with $d.treffpunkt.uebliche_treffpunkte }}{{ $treff = merge $treff (dict "uebliche_treffpunkte" .) }}{{ end -}}
+
+{{- $quals := slice -}}
+{{- range $d.qualifikationen -}}
+  {{- $q := dict "id" .id "bezeichnung" .bezeichnung -}}
+  {{- $belegt := false -}}
+  {{- with .aussteller }}{{ $q = merge $q (dict "aussteller" .) }}{{ $belegt = true }}{{ end -}}
+  {{- with .jahr }}{{ $q = merge $q (dict "jahr" .) }}{{ end -}}
+  {{- with .nachweis_url }}{{ $q = merge $q (dict "pruef_url" .) }}{{ $belegt = true }}{{ end -}}
+  {{- $q = merge $q (dict "nachweis" (cond $belegt "belegt (Aussteller/Pruef-URL)" "Selbstauskunft auf ersteschischule.at")) -}}
+  {{- $quals = $quals | append $q -}}
+{{- end -}}
+
+{{- $ablauf := slice -}}{{- range $d.bedingungen.ablauf }}{{ $ablauf = $ablauf | append .text }}{{ end -}}
+{{- $regeln := dict -}}
+{{- range $k, $v := $d.bedingungen }}{{ if and (ne $k "ablauf") $v }}{{ $regeln = merge $regeln (dict $k $v) }}{{ end }}{{ end -}}
+
+{{- $faqs := slice -}}{{- range $d.faqs }}{{ $faqs = $faqs | append (dict "frage" .frage "antwort" .antwort) }}{{ end -}}
+{{- range $d.kundenfragen }}{{ $faqs = $faqs | append (dict "frage" .frage "antwort" .antwort) }}{{ end -}}
+
+{{- $ds := slice -}}{{- range $d.datenschutz }}{{ $ds = $ds | append .text }}{{ end -}}
+{{- $dsUrls := dict -}}{{- $impUrls := dict -}}
+{{- range site.Home.AllTranslations -}}
+  {{- $l := .Language.Lang -}}
+  {{- $dsUrls = merge $dsUrls (dict $l (cond (eq $l "de") (printf "%sdatenschutz/" $web) (printf "%s%s/datenschutz/" $web $l))) -}}
+  {{- $impUrls = merge $impUrls (dict $l (cond (eq $l "de") (printf "%simpressum/" $web) (printf "%s%s/impressum/" $web $l))) -}}
+{{- end -}}
+
+{{- $kontakt := dict
+    "name" $d.anbieter.name
+    "telefon" $p.phone
+    "telefon_link" (printf "tel:%s" (replace $p.phone " " ""))
+    "whatsapp" (printf "https://wa.me/%s" $p.whatsapp)
+    "email" $p.email
+    "adresse" $adresseText
+    "website" $web
+    "hinweis" "Am schnellsten telefonisch oder per WhatsApp, auch kurzfristig waehrend der Saison. Ueber die Website wird nichts verbindlich gebucht; Ulf meldet sich persoenlich."
+-}}
+{{- if $mitFormular }}{{ $kontakt = merge $kontakt (dict "anfrageformular" (printf "%s#anfrage" $web) "anfrage_werkzeug" "privatstunde_anfragen") }}{{ end -}}
+
+{{- $katalog := dict
+    "anbieter" (dict "name" $d.anbieter.name "rolle" $d.anbieter.rolle "beschreibung" $d.anbieter.beschreibung "website" $web "adresse" $adresseText "sprachen_seite" $d.anbieter.sprachen_seite)
+    "angebote" (dict "anbieter" (printf "%s, %s, Flachau (Salzburg, Oesterreich)" $d.anbieter.name $d.anbieter.rolle) "waehrung" $d.waehrung "personen_max" $d.personen_max "angebote" $angebote
+                     "hinweis" (printf "%s · %s. Preise laut Website; ueber die Website wird nichts verbindlich gebucht." $d.saison.text.de $d.treffpunkt.text.de))
+    "preise_und_bedingungen" (dict "waehrung" $d.waehrung "preise" $angebote "aufpreis_je_weitere_person_eur" $zuschlag.preis_eur "personen_max" $d.personen_max
+                     "ablauf" $ablauf "regeln" $regeln "offen_bei_ulf" $offen "offen_hinweis" $offenHinweis)
+    "faqs" (dict "faqs" $faqs)
+    "treffpunkt" (merge $treff (dict "offen_bei_ulf" (intersect $offen (slice "Genauer Treffpunkt, Anfahrt und Parken"))))
+    "saison" (merge $saison (dict "offen_bei_ulf" (intersect $offen (slice "Genaue Saisondaten (erster und letzter Unterrichtstag)"))))
+    "kontakt" $kontakt
+    "qualifikationen" (dict "anbieter" $d.anbieter.name "qualifikationen" $quals)
+    "stimmen" (dict "stimmen" $d.stimmen)
+    "impressum" (dict "name" $d.anbieter.name "taetigkeit" "Skilehrer" "adresse" $adresseText "telefon" $p.phone "email" $p.email "impressum_url" $impUrls.de "impressum_urls" $impUrls "hinweis" "Kurzfassung. Massgeblich ist das deutsche Impressum unter impressum_url.")
+    "datenschutz" (dict "kurzfassung" $ds "verantwortlicher" (printf "%s, %s, %s" $d.anbieter.name $adresseText $p.email) "datenschutz_url" $dsUrls.de "datenschutz_urls" $dsUrls "hinweis" "Kurzfassung. Massgeblich ist die vollstaendige Datenschutzerklaerung.")
+    "offen_bei_ulf" (dict "themen" $offen "hinweis" $offenHinweis)
+-}}
+
+{{- /* Werkzeuge: Platzhalter ersetzen, bedingte weglassen */ -}}
+{{- $roh := hugo.Data.webmcp.werkzeuge | jsonify -}}
+{{- $roh = replace $roh "\"{angebot_ids}\"" ($angebotIds | jsonify) -}}
+{{- $roh = replace $roh "\"{anfrage_ids}\"" ($anfrageIds | jsonify) -}}
+{{- $roh = replace $roh "{website}" $web -}}
+{{- $werkzeuge := slice -}}
+{{- range ($roh | transform.Unmarshal) -}}
+  {{- $an := true -}}
+  {{- with .nur_wenn -}}
+    {{- if eq . "anfrageformular" }}{{ $an = $mitFormular }}{{ else }}{{ $an = gt (len (index $d .)) 0 }}{{ end -}}
+  {{- end -}}
+  {{- if $an }}{{ $werkzeuge = $werkzeuge | append . }}{{ end -}}
+{{- end -}}
+
+{{- return (dict "katalog" $katalog "werkzeuge" $werkzeuge) -}}

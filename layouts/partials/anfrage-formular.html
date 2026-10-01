@@ -52,7 +52,7 @@
       <label for="af-angebot">{{ i18n "f_angebot" }}</label>
       <select id="af-angebot" name="angebot" required aria-describedby="af-angebot-fehler">
         <option value="">{{ i18n "f_bitte_waehlen" }}</option>
-        {{- range site.Data.ulf.angebote }}{{ if not .zuschlag }}
+        {{- range hugo.Data.ulf.angebote }}{{ if not .zuschlag }}
         <option value="{{ .wert }}" data-id="{{ .id }}">{{ index .name site.Language.Lang }} · {{ partial "preis.html" . }}</option>
         {{- end }}{{ end }}
         <option value="Noch offen" data-id="noch_offen">{{ i18n "f_angebot_offen" }}</option>

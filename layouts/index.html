@@ -61,9 +61,9 @@
     <section class="offers" id="angebote">
       <h2>{{ .Params.offers_title_light }} <span class="accent">{{ .Params.offers_title_accent }}</span></h2>
       {{- $L := site.Language.Lang }}
-      <p class="note">{{ index site.Data.ulf.saison.text $L }} · {{ index site.Data.ulf.treffpunkt.text $L }}</p>
+      <p class="note">{{ index hugo.Data.ulf.saison.text $L }} · {{ index hugo.Data.ulf.treffpunkt.text $L }}</p>
       <div class="grid">
-        {{ range site.Data.ulf.angebote }}
+        {{ range hugo.Data.ulf.angebote }}
         <div class="card{{ if .featured }} featured{{ end }}" data-angebot="{{ .id }}" data-preis-eur="{{ .preis_eur }}"{{ if .zuschlag }} data-zuschlag{{ end }}>
           <h3>{{ index .name $L }}</h3>
           <p class="duration">{{ index .dauer $L }}</p>
@@ -100,7 +100,7 @@
         <a class="btn" href="mailto:{{ .Site.Params.email }}">{{ .Site.Params.email }}</a>
         {{ if and site.Params.anfrageEndpoint (or site.Params.turnstileSitekey site.Params.anfrageOhneTurnstile) }}<a class="btn" href="#anfrage">{{ i18n "anfrage_cta" }}</a>{{ end }}
       </div>
-      {{ with site.Data.ulf.anbieter.adresse }}<p class="addr">{{ .strasse }}, {{ .plz }} {{ .ort }}, {{ .land }}</p>{{ end }}
+      {{ with hugo.Data.ulf.anbieter.adresse }}<p class="addr">{{ .strasse }}, {{ .plz }} {{ .ort }}, {{ .land }}</p>{{ end }}
     </section>
 
     {{ partial "anfrage-formular.html" . }}
@@ -126,6 +126,8 @@
 {{- $texte = merge $texte (dict . (i18n .)) -}}
 {{- end }}
 <script type="application/json" id="anfrage-cfg">{{ dict "lang" site.Language.Lang "telefon" site.Params.phone "telefonUri" (replace site.Params.phone " " "") "whatsapp" site.Params.whatsapp "datenschutz" ("datenschutz/" | relLangURL) "texte" $texte | jsonify | safeJS }}</script>
+ {{- $mitFormular := and site.Params.anfrageEndpoint (or site.Params.turnstileSitekey site.Params.anfrageOhneTurnstile) | default false }}
+<script type="application/json" id="ulf-katalog">{{ partial "katalog.html" (dict "mitFormular" $mitFormular) | jsonify | safeJS }}</script>
 {{- $js := resources.Get "js/anfrage.js" | minify | fingerprint }}
 <script src="{{ $js.RelPermalink }}" integrity="{{ $js.Data.Integrity }}" defer></script>
 </body>

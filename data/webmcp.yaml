@@ -1,0 +1,188 @@
+# ==================================================================================================
+#  WebMCP-Werkzeuge für ersteschischule.at — Namen, Beschreibungen, Eingabeschema.
+#
+#  Eine Definition für drei Ausgaben: die Anmeldung im Browser (assets/js/anfrage.js liest sie aus
+#  dem eingebetteten Katalog), /webmcp.json und /llms.txt. Die Inhalte, die die Werkzeuge liefern,
+#  stehen in data/ulf.yaml.
+#
+#  Beschreibungen ASCII (Chrome hat Umlaute in Werkzeug-Texten verstuemmelt, Lehre projekt-entwicklung.at),
+#  mindestens 150 Zeichen, und sie sagen, WAS zurueckkommt (Alex' Massstab, integrations.at).
+#  Platzhalter, die layouts/partials/katalog.html ersetzt:
+#    "{website}"           -> Basis-URL der Seite
+#    "{angebot_ids}"       -> alle Angebots-ids aus data/ulf.yaml (als Liste, im enum)
+#    "{anfrage_ids}"       -> buchbare Angebots-ids + noch_offen (ohne Aufpreis-Eintrag)
+#  `quelle` = Schluessel im Katalog, den das Lesewerkzeug zurueckgibt (JS: anfrage.js, Abschnitt WebMCP).
+#  `nur_wenn` = Werkzeug wird nur angemeldet, wenn dieser Katalog-Schluessel nicht leer ist.
+# ==================================================================================================
+
+werkzeuge:
+  - name: "list_angebote"
+    title: "Angebote von Ulf Seidl auflisten"
+    quelle: "angebote"
+    description: >-
+      Listet alle Privatstunden-Angebote von Ulf Seidl, staatlich gepruefter Skilehrer in Flachau (Snow Space Salzburg),
+      genau wie auf ersteschischule.at. Liefert je Angebot: id, Name (deutsch, englisch, niederlaendisch), Dauer, Preis in
+      Euro als Zahl (preis_eur) und als Text, Kurzbeschreibung und ob es ein Aufpreis je weiterer Person ist. Dazu Waehrung,
+      Hoechstzahl Personen und den Hinweis, dass ueber die Website nichts verbindlich gebucht wird. Nur lesen.
+    inputSchema: { type: "object", properties: {}, additionalProperties: false }
+    annotations: { readOnlyHint: true }
+
+  - name: "get_angebot"
+    title: "Ein Angebot im Detail"
+    quelle: "angebot"
+    description: >-
+      Liefert ein einzelnes Angebot von Ulf Seidl anhand der id aus list_angebote (schnupperstunde, halbtag_privat,
+      ganztag_privat oder weitere_person): Name, Dauer, Preis in Euro, Beschreibung, den Aufpreis je weiterer Person,
+      die Hoechstzahl Personen, Saison und Treffpunkt sowie den naechsten Schritt zur Anfrage. Gibt bei unbekannter id
+      einen Fehler mit der Liste gueltiger ids zurueck. Nur lesen.
+    inputSchema:
+      type: "object"
+      properties:
+        id: { type: "string", enum: "{angebot_ids}", description: "id des Angebots, wie list_angebote sie liefert." }
+      required: ["id"]
+      additionalProperties: false
+    annotations: { readOnlyHint: true }
+
+  - name: "get_preise_und_bedingungen"
+    title: "Preise und Bedingungen"
+    quelle: "preise_und_bedingungen"
+    description: >-
+      Liefert die Preisliste von Ulf Seidl in Euro (Schnupperstunde, Halbtag, Ganztag, Aufpreis je weiterer Person bis
+      4 Personen) und die Regeln zum Ablauf, wie sie auf ersteschischule.at stehen: wie eine Anfrage laeuft, wie der
+      Treffpunkt vereinbart wird, wer mitkommen darf. Gibt ausserdem unter offen_bei_ulf die Themen zurueck, zu denen die
+      Website nichts sagt (z. B. Storno, Zahlung, Liftkarte) - diese bitte direkt bei Ulf erfragen, nicht annehmen.
+    inputSchema: { type: "object", properties: {}, additionalProperties: false }
+    annotations: { readOnlyHint: true }
+
+  - name: "list_faqs"
+    title: "Haeufige Fragen"
+    quelle: "faqs"
+    description: >-
+      Liefert die haeufigen Fragen zu Ulf Seidls Privat-Skiunterricht in Flachau mit Antwort (je Eintrag frage und antwort):
+      Preise, Saison, Treffpunkt, fuer wen der Unterricht passt, mehrere Personen, Sprache, kurzfristige Termine, Ablauf
+      einer Anfrage. Jede Antwort steht so auf ersteschischule.at. Optional mit suchbegriff, dann nur passende Eintraege.
+    inputSchema:
+      type: "object"
+      properties:
+        suchbegriff: { type: "string", maxLength: 100, description: "Optional: Wort oder kurze Wortfolge, z. B. Preis, Kinder, Treffpunkt. Leer = alle Fragen." }
+      additionalProperties: false
+    annotations: { readOnlyHint: true }
+
+  - name: "suche_website"
+    title: "Antwort auf eine Frage suchen"
+    quelle: "suche"
+    description: >-
+      Durchsucht alles, was ersteschischule.at ueber Ulf Seidls Privat-Skiunterricht sagt - haeufige Fragen, Angebote und
+      Preise, Ablauf, Qualifikationen, Saison und Treffpunkt - nach einem Suchbegriff oder einer Frage in eigenen Worten.
+      Liefert je Treffer bereich, titel, text und das Werkzeug mit den vollstaendigen Daten. Ohne Treffer: leere Liste
+      und die Themen, die bei Ulf direkt zu erfragen sind.
+    inputSchema:
+      type: "object"
+      properties:
+        suchbegriff: { type: "string", minLength: 2, maxLength: 200, description: "Suchbegriff oder Frage, z. B. \"Was kostet ein halber Tag\" oder \"Kinder\"." }
+      required: ["suchbegriff"]
+      additionalProperties: false
+    annotations: { readOnlyHint: true }
+
+  - name: "get_treffpunkt_und_anfahrt"
+    title: "Treffpunkt und Anfahrt"
+    quelle: "treffpunkt"
+    description: >-
+      Liefert, wo der Unterricht bei Ulf Seidl stattfindet: Treffpunkt nach Vereinbarung direkt an der Piste in Flachau,
+      das Gebiet (Flachau, Snow Space Salzburg) und den Hinweis, dass die Geschaeftsadresse nicht der Treffpunkt ist.
+      Gibt Anfahrt, Parken und uebliche Treffpunkte nur zurueck, wenn Ulf sie angegeben hat; sonst stehen sie unter
+      offen_bei_ulf. Nur lesen.
+    inputSchema: { type: "object", properties: {}, additionalProperties: false }
+    annotations: { readOnlyHint: true }
+
+  - name: "get_saison"
+    title: "Saison und Termine"
+    quelle: "saison"
+    description: >-
+      Liefert die Saison, in der Ulf Seidl in Flachau unterrichtet (Dezember bis April, als Text und als Monatszahlen
+      von_monat/bis_monat), den Hinweis zu kurzfristigen Terminen waehrend der Saison und den schnellsten Weg zu einem
+      Termin. Genaue Saisondaten kommen nur zurueck, wenn Ulf sie angegeben hat. Freie Termine kennt nur Ulf selbst -
+      dieses Werkzeug liefert keinen Kalender.
+    inputSchema: { type: "object", properties: {}, additionalProperties: false }
+    annotations: { readOnlyHint: true }
+
+  - name: "get_kontakt"
+    title: "Kontakt zu Ulf Seidl"
+    quelle: "kontakt"
+    description: >-
+      Liefert die Kontaktwege zu Ulf Seidl, Privat-Skilehrer in Flachau: Telefon (auch als tel:-Link), WhatsApp-Link,
+      E-Mail-Adresse, Geschaeftsadresse, die Adresse des Anfrageformulars und den Namen des Werkzeugs, das das Formular
+      fuer die Person ausfuellt (privatstunde_anfragen). Laut Website ist Ulf am schnellsten telefonisch oder per WhatsApp
+      erreichbar, auch kurzfristig waehrend der Saison. Nur lesen.
+    inputSchema: { type: "object", properties: {}, additionalProperties: false }
+    annotations: { readOnlyHint: true }
+
+  - name: "list_qualifikationen"
+    title: "Qualifikation und Erfahrung"
+    quelle: "qualifikationen"
+    description: >-
+      Liefert Fachkunde und Erfahrung von Ulf Seidl, je Eintrag id, bezeichnung und nachweis: staatlich gepruefter
+      Skilehrer, seit ueber drei Jahrzehnten auf den Pisten von Flachau, viele Jahre Aufbau und Leitung einer grossen
+      Skischule im Ort, Unterrichtssprachen und Zielgruppen. nachweis sagt, ob ein Eintrag nur als Selbstauskunft auf der
+      Website steht oder mit Aussteller, Jahr und Pruef-URL belegt ist. Nur lesen.
+    inputSchema: { type: "object", properties: {}, additionalProperties: false }
+    annotations: { readOnlyHint: true }
+
+  - name: "list_stimmen"
+    title: "Stimmen von Gaesten"
+    quelle: "stimmen"
+    nur_wenn: "stimmen"
+    description: >-
+      Liefert echte Stimmen von Gaesten zu Ulf Seidls Privat-Skiunterricht in Flachau, je Eintrag text, name (oder
+      Initialen), datum und quelle_url, so wie sie mit Einverstaendnis der Gaeste auf ersteschischule.at stehen.
+      Es werden keine Bewertungen zusammengefasst, geschaetzt oder erfunden. Nur lesen.
+    inputSchema: { type: "object", properties: {}, additionalProperties: false }
+    annotations: { readOnlyHint: true }
+
+  - name: "get_impressum"
+    title: "Impressum"
+    quelle: "impressum"
+    description: >-
+      Liefert die Anbieterangaben von ersteschischule.at: Name (Ulf Seidl), Taetigkeit (Skilehrer), Geschaeftsadresse in
+      Flachau, Telefon und E-Mail sowie die Adresse der vollstaendigen Impressum-Seite (deutsch massgeblich). Fuer
+      rechtlich verbindliche Angaben immer die Impressum-Seite selbst lesen; das Werkzeug gibt nur die Kurzfassung zurueck.
+    inputSchema: { type: "object", properties: {}, additionalProperties: false }
+    annotations: { readOnlyHint: true }
+
+  - name: "get_datenschutz"
+    title: "Datenschutz in Kurzform"
+    quelle: "datenschutz"
+    description: >-
+      Liefert eine Kurzfassung der Datenschutzerklaerung von ersteschischule.at in Punkten: keine Cookies und kein Tracking,
+      Hosting, wer Anfragen aus dem Formular verarbeitet und wo, Speicherdauer der IP-Adresse, Cloudflare Turnstile, keine
+      Auswertung mit KI, Rechte der Betroffenen. Dazu die Adressen der vollstaendigen Erklaerung je Sprache und den
+      Verantwortlichen. Massgeblich ist die vollstaendige Erklaerung. Nur lesen.
+    inputSchema: { type: "object", properties: {}, additionalProperties: false }
+    annotations: { readOnlyHint: true }
+
+  - name: "privatstunde_anfragen"
+    title: "Privatstunde bei Ulf Seidl anfragen"
+    nur_wenn: "anfrageformular"
+    description: >-
+      Bereitet eine Anfrage fuer eine private Skistunde bei Ulf Seidl in Flachau vor: fuellt das Anfrageformular auf
+      ersteschischule.at aus, damit die Person es pruefen kann. GESENDET wird erst, wenn die Person selbst auf "Anfrage
+      senden" drueckt; das Ergebnis dieses Absendens ist die Antwort des Werkzeugs (ok true = Anfrage angekommen, ok false
+      mit error und recovery). Fragen Sie vorher nach dem echten Namen, nach E-Mail-Adresse oder Telefonnummer (mindestens
+      eines), Wunschtermin, Angebot, Personenzahl und Koennen; setzen Sie einwilligung nur auf true, wenn die Person der
+      Datenschutzerklaerung zugestimmt hat, und erfinden Sie keine Angaben. Preise vorher mit list_angebote oder
+      get_preise_und_bedingungen holen. Es wird nichts verbindlich gebucht; Ulf meldet sich persoenlich.
+    inputSchema:
+      type: "object"
+      properties:
+        name: { type: "string", minLength: 2, maxLength: 120, description: "Vor- und Nachname der anfragenden Person." }
+        email: { type: "string", maxLength: 160, description: "E-Mail-Adresse fuer die Antwort und die Bestaetigung. E-Mail oder telefon, mindestens eines." }
+        telefon: { type: "string", maxLength: 40, description: "Telefon- oder WhatsApp-Nummer, nur Ziffern, Leerzeichen und + ( ) / -, mindestens 6 Ziffern. E-Mail oder telefon, mindestens eines." }
+        wunschtermin: { type: "string", minLength: 2, maxLength: 120, description: "Wunschtermin oder Zeitraum in eigenen Worten, z. B. \"14.-16. Februar 2027, vormittags\"." }
+        angebot: { type: "string", enum: "{anfrage_ids}", description: "Gewuenschtes Angebot: schnupperstunde (55 min), halbtag_privat (3 h), ganztag_privat (bis 6 h) oder noch_offen." }
+        personen: { type: "integer", minimum: 1, maximum: 4, description: "Anzahl der Personen, 1 bis 4 (jede weitere Person mit Aufpreis)." }
+        niveau: { type: "string", enum: ["anfaenger", "fortgeschritten", "koenner"], description: "Koennen: anfaenger, fortgeschritten oder koenner." }
+        nachricht: { type: "string", maxLength: 4000, description: "Optional: Alter der Kinder, Wuensche, Fragen. Nichts erfinden." }
+        einwilligung: { type: "boolean", description: "true nur, wenn die Person der Verarbeitung laut Datenschutzerklaerung ({website}datenschutz/) zugestimmt hat." }
+      required: ["name", "wunschtermin", "angebot", "personen", "niveau", "einwilligung"]
+      additionalProperties: false
+    annotations: { readOnlyHint: false }
