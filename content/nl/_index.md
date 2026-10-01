@@ -19,19 +19,31 @@ offers_title_accent: "prijzen"
 offers_note: "Seizoen december tot april · ontmoetingspunt in overleg, direct aan de piste in Flachau"
 offers:
   - name: "Proefles"
+    id: "schnupperstunde"
+    preis_eur: 75
+    wert: "Schnupperstunde"
     duration: "55 minuten"
     price: "€ 75"
     text: "Ideaal om kennis te maken of om gericht aan uw techniek te werken."
   - name: "Halve dag privé"
+    id: "halbtag_privat"
+    preis_eur: 195
+    wert: "Halbtag privat"
     duration: "3 uur"
     price: "€ 195"
     text: "De klassieker: genoeg tijd voor echte vooruitgang — 's ochtends of 's middags."
     featured: true
   - name: "Hele dag privé"
+    id: "ganztag_privat"
+    preis_eur: 320
+    wert: "Ganztag privat"
     duration: "tot 6 uur"
     price: "€ 320"
     text: "Een hele dag alleen voor u: techniek, lokale tips en de mooiste afdalingen van de regio."
   - name: "Extra persoon"
+    id: "weitere_person"
+    preis_eur: 15
+    zuschlag: true
     duration: "per persoon"
     price: "+ € 15"
     text: "Familie of vrienden van vergelijkbaar niveau? Tot 4 personen welkom."

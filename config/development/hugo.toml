@@ -1,0 +1,6 @@
+# Nur für `hugo server` (Umgebung development) — der CI-Bau (`hugo --minify`, production) liest das nicht.
+# Lokaler Test gegen eine lokal gestartete contact-api (Ulf-Werte, SMTP-Attrappe, ohne Turnstile).
+[params]
+  anfrageEndpoint = "http://127.0.0.1:18092/contact"
+  turnstileSitekey = ""
+  anfrageOhneTurnstile = true

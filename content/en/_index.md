@@ -19,19 +19,31 @@ offers_title_accent: "prices"
 offers_note: "Season December to April · meeting point by arrangement, right on the slopes of Flachau"
 offers:
   - name: "Taster lesson"
+    id: "schnupperstunde"
+    preis_eur: 75
+    wert: "Schnupperstunde"
     duration: "55 minutes"
     price: "€ 75"
     text: "Perfect to get started or for focused technique fine-tuning."
   - name: "Private half day"
+    id: "halbtag_privat"
+    preis_eur: 195
+    wert: "Halbtag privat"
     duration: "3 hours"
     price: "€ 195"
     text: "The classic: enough time for real progress — mornings or afternoons."
     featured: true
   - name: "Private full day"
+    id: "ganztag_privat"
+    preis_eur: 320
+    wert: "Ganztag privat"
     duration: "up to 6 hours"
     price: "€ 320"
     text: "A whole day just for you: technique, local secrets and the region's finest runs."
   - name: "Additional person"
+    id: "weitere_person"
+    preis_eur: 15
+    zuschlag: true
     duration: "per person"
     price: "+ € 15"
     text: "Family or friends at a similar level? Up to 4 people welcome."

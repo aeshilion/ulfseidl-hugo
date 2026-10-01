@@ -100,3 +100,39 @@ footer a{color:#aaa}
 
 a.logotile{text-decoration:none;cursor:pointer;display:block}
 a.logotile:hover{box-shadow:0 3px 14px rgba(0,0,0,.35)}
+
+/* Anfrageformular (partials/anfrage-formular.html) — Seitenrot, Oxygen, eckige Kanten wie .btn/.card */
+.anfrage{border-top:1px solid var(--linie)}
+.af-lead{max-width:640px}
+.af{background:#fff;border:1px solid #e0e0e0;border-top:3px solid var(--rot);box-shadow:0 2px 14px rgba(0,0,0,.13);padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:16px 20px;margin-top:18px}
+.af-voll{grid-column:1/-1}
+.af-feld{display:flex;flex-direction:column;gap:5px;min-width:0}
+.af label,.af legend{font-weight:700;color:#333;font-size:14.5px}
+.af label small{font-weight:400;color:var(--grau)}
+.af fieldset{border:0;padding:0;margin:0}
+.af legend{padding:0;margin-bottom:2px}
+.af-zwei{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px}
+.af-zwei>div{display:flex;flex-direction:column;gap:5px;min-width:0}
+.af input[type=text],.af input[type=email],.af input[type=tel],.af select,.af textarea{font:inherit;font-size:16px;color:#333;background:#fff;border:1px solid #bbb;border-radius:2px;padding:10px 12px;min-height:46px;width:100%}
+.af textarea{min-height:110px;resize:vertical}
+.af input:focus-visible,.af select:focus-visible,.af textarea:focus-visible,.af button:focus-visible,.af a:focus-visible{outline:3px solid rgba(187,45,35,.45);outline-offset:1px;border-color:var(--rot)}
+.af input[aria-invalid=true],.af select[aria-invalid=true],.af textarea[aria-invalid=true]{border-color:var(--rot);border-width:2px;background:#fff7f6}
+.af input[type=checkbox][aria-invalid=true]{outline:2px solid var(--rot);outline-offset:2px}
+.af-hinweis{font-size:13.5px;color:#666;margin:0}
+.af-fehler{color:#a3261d;font-size:13.5px;font-weight:700;margin:0}
+.af-fehler::before{content:"! ";}
+.af-einw{flex-direction:row;flex-wrap:wrap;align-items:flex-start;gap:10px}
+.af-einw input{width:22px;height:22px;flex:0 0 22px;margin:2px 0 0;accent-color:var(--rot)}
+.af-einw label{flex:1 1 0;font-weight:400;font-size:14px;line-height:1.5;color:#444}
+.af-einw .af-fehler{flex-basis:100%}
+.af-fuss{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.af button{font:inherit;font-size:16px;border:0;cursor:pointer;padding:12px 26px;min-height:46px}
+.af button[disabled]{opacity:.6;cursor:wait}
+.af-status{font-size:15px;line-height:1.5;padding:12px 14px;border:1px solid #ddd;background:#fafafa}
+.af-status[hidden]{display:none}
+.af-gut{background:#f1f8ef;border-color:#5b8f4e;color:#24461c}
+.af-schlecht{background:#fdf0ef;border-color:var(--rot);color:#7c1c15}
+.af-agent{background:#fff8e6;border-color:#d9a400;color:#5a4300}
+.af-status a{color:inherit;font-weight:700}
+.af-hp{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
+@media(max-width:640px){.af{grid-template-columns:1fr;padding:18px 14px}.af-zwei{grid-template-columns:1fr}}

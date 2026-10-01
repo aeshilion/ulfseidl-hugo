@@ -23,3 +23,16 @@ enableRobotsTXT = true
   whatsapp = "436645442222"
   email = "ulf@ersteschischule.at"
   address = "Stahlhammergasse 268, 5542 Flachau, Österreich"
+
+  # --- Anfrageformular (layouts/partials/anfrage-formular.html, assets/js/anfrage.js) ---------------
+  # Das Formular erscheint erst, wenn anfrageEndpoint gesetzt ist (und Turnstile laufen kann).
+  # >>> GO-LIVE: hier die Adresse der Ulf-Instanz der contact-api eintragen, z. B.
+  #     "https://form.ersteschischule.at/contact" — Hostname = Cloudflare-Tunnel-Route auf 127.0.0.1:8092
+  #     (projekt-entwicklung-contact-api, deploy/ulf/, README „Dritte Instanz“). Leer = kein Formular.
+  anfrageEndpoint = ""
+  # Turnstile-Widget „ersteschischule.at“ (öffentlicher Sitekey, kein Geheimnis; das Secret liegt
+  # nur am Server als TURNSTILE_SECRET in /etc/ulf-contact-api.env).
+  turnstileSitekey = "0x4AAAAAAFK-jnpQcDpDW-Re"
+  # WebMCP-Origin-Trial-Token für https://ersteschischule.at (Chrome 149–156, Trial endet 17.11.2026).
+  # Leer = kein Meta-Tag; ohne Token sehen nur Browser mit eingeschaltetem WebMCP die Werkzeuge.
+  webmcpOriginTrial = ""

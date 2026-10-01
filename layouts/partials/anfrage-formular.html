@@ -1,0 +1,100 @@
+{{- /*
+  Anfrageformular unten auf der Startseite (DE/EN/NL). Sendet per fetch an die Ulf-Instanz der
+  contact-api (Repo projekt-entwicklung-contact-api, deploy/ulf/). Logik und WebMCP: assets/js/anfrage.js.
+
+  Erscheint NUR, wenn site.Params.anfrageEndpoint gesetzt ist UND Turnstile laufen kann
+  (turnstileSitekey) — oder lokal mit anfrageOhneTurnstile (nur config/development/). So geht nie ein
+  Formular live, dessen Bot-Prüfung nicht laufen kann (Regel wie bei der BIZ-Startseite).
+
+  Feldwerte, die beim Server ankommen, sind sprachunabhängig (deutsch): das Angebot (topic) muss
+  wörtlich in THEMEN_LISTE der Instanz stehen (deploy/ulf/env.example), sonst „nicht zugeordnet“.
+  Ohne Skript (noch nicht geladen, blockiert) fällt das Formular auf mailto zurück wie bei BIZ — nie auf
+  GET, sonst stünden Name, Mail und Telefon in der Adresszeile (gemessen 01.10.2026 beim Test).
+  Honigtopf AUSSERHALB des Formulars (Lehre aus dem EAP-Formular: Agenten sehen jedes Feld im Formular).
+*/ -}}
+{{- $endpoint := site.Params.anfrageEndpoint -}}
+{{- $sitekey := site.Params.turnstileSitekey -}}
+{{- $ohneTs := site.Params.anfrageOhneTurnstile -}}
+{{- if and $endpoint (or $sitekey $ohneTs) -}}
+{{- $ds := "datenschutz/" | relLangURL -}}
+<section class="anfrage" id="anfrage" aria-labelledby="anfrage-titel">
+  <h2 id="anfrage-titel">{{ i18n "anfrage_titel_hell" }} <span class="accent">{{ i18n "anfrage_titel_akzent" }}</span></h2>
+  <p class="af-lead">{{ i18n "anfrage_lead" }}</p>
+  <form id="anfrage-form" class="af" method="post" action="mailto:{{ site.Params.email }}" enctype="text/plain" novalidate data-endpoint="{{ $endpoint }}" aria-labelledby="anfrage-titel">
+    <div class="af-feld">
+      <label for="af-name">{{ i18n "f_name" }}</label>
+      <input id="af-name" name="name" type="text" required minlength="2" maxlength="120" autocomplete="name" placeholder="{{ i18n "f_name_ph" }}" aria-describedby="af-name-fehler">
+      <p class="af-fehler" id="af-name-fehler" hidden></p>
+    </div>
+    <div class="af-feld">
+      <label for="af-termin">{{ i18n "f_termin" }}</label>
+      <input id="af-termin" name="wunschtermin" type="text" required maxlength="120" placeholder="{{ i18n "f_termin_ph" }}" aria-describedby="af-termin-fehler">
+      <p class="af-fehler" id="af-termin-fehler" hidden></p>
+    </div>
+    <fieldset class="af-feld af-voll af-kontakt" aria-describedby="af-kontakt-hinweis af-kontakt-fehler">
+      <legend>{{ i18n "f_kontakt" }}</legend>
+      <p class="af-hinweis" id="af-kontakt-hinweis">{{ i18n "f_kontakt_hinweis" }}</p>
+      <div class="af-zwei">
+        <div>
+          <label for="af-email">{{ i18n "f_email" }}</label>
+          <input id="af-email" name="email" type="email" maxlength="160" autocomplete="email" inputmode="email" aria-describedby="af-email-fehler">
+          <p class="af-fehler" id="af-email-fehler" hidden></p>
+        </div>
+        <div>
+          <label for="af-telefon">{{ i18n "f_telefon" }}</label>
+          <input id="af-telefon" name="phone" type="tel" maxlength="40" autocomplete="tel" inputmode="tel" aria-describedby="af-telefon-fehler">
+          <p class="af-fehler" id="af-telefon-fehler" hidden></p>
+        </div>
+      </div>
+      <p class="af-fehler" id="af-kontakt-fehler" hidden></p>
+    </fieldset>
+    <div class="af-feld">
+      <label for="af-angebot">{{ i18n "f_angebot" }}</label>
+      <select id="af-angebot" name="angebot" required aria-describedby="af-angebot-fehler">
+        <option value="">{{ i18n "f_bitte_waehlen" }}</option>
+        {{- range .Params.offers }}{{ if not .zuschlag }}
+        <option value="{{ .wert }}" data-id="{{ .id }}">{{ .name }} · {{ .price }}</option>
+        {{- end }}{{ end }}
+        <option value="Noch offen" data-id="noch_offen">{{ i18n "f_angebot_offen" }}</option>
+      </select>
+      <p class="af-fehler" id="af-angebot-fehler" hidden></p>
+    </div>
+    <div class="af-feld">
+      <label for="af-personen">{{ i18n "f_personen" }}</label>
+      <select id="af-personen" name="personen" required aria-describedby="af-personen-hinweis af-personen-fehler">
+        <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+      </select>
+      <p class="af-hinweis" id="af-personen-hinweis">{{ i18n "f_personen_hinweis" }}</p>
+      <p class="af-fehler" id="af-personen-fehler" hidden></p>
+    </div>
+    <div class="af-feld">
+      <label for="af-niveau">{{ i18n "f_niveau" }}</label>
+      <select id="af-niveau" name="niveau" required aria-describedby="af-niveau-fehler">
+        <option value="">{{ i18n "f_bitte_waehlen" }}</option>
+        <option value="Anfänger" data-id="anfaenger">{{ i18n "f_niveau_anfaenger" }}</option>
+        <option value="Fortgeschritten" data-id="fortgeschritten">{{ i18n "f_niveau_fortgeschritten" }}</option>
+        <option value="Könner" data-id="koenner">{{ i18n "f_niveau_koenner" }}</option>
+      </select>
+      <p class="af-fehler" id="af-niveau-fehler" hidden></p>
+    </div>
+    <div class="af-feld af-voll">
+      <label for="af-nachricht">{{ i18n "f_nachricht" }} <small>({{ i18n "f_optional" }})</small></label>
+      <textarea id="af-nachricht" name="message" maxlength="4000" rows="4" placeholder="{{ i18n "f_nachricht_ph" }}"></textarea>
+    </div>
+    <div class="af-feld af-voll af-einw">
+      <input id="af-consent" name="consent" type="checkbox" required aria-describedby="af-consent-fehler">
+      <label for="af-consent">{{ i18n "f_einwilligung" }} <a href="{{ $ds }}">{{ i18n "f_datenschutz" }}</a>.</label>
+      <p class="af-fehler" id="af-consent-fehler" hidden></p>
+    </div>
+    {{- if $sitekey }}
+    <div class="cf-turnstile af-voll" data-sitekey="{{ $sitekey }}" data-appearance="interaction-only" data-language="{{ site.Language.Lang }}"></div>
+    {{- end }}
+    <div class="af-fuss af-voll">
+      <button type="submit" class="btn primary">{{ i18n "f_senden" }}</button>
+      <span class="af-hinweis">{{ i18n "f_hinweis" }}</span>
+    </div>
+    <div id="anfrage-status" class="af-status af-voll" role="status" aria-live="polite" tabindex="-1" hidden></div>
+  </form>
+  <div class="af-hp" aria-hidden="true"><label>{{ i18n "f_honig" }}<input type="text" id="anfrage-hp" name="website" tabindex="-1" autocomplete="off"></label></div>
+</section>
+{{- end -}}

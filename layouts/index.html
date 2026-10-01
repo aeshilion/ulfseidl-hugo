@@ -18,6 +18,7 @@
 <meta property="og:image" content="{{ .Site.BaseURL }}images/ulf-action.jpg">
 <meta property="og:url" content="{{ .Permalink }}">
 <meta name="twitter:card" content="summary_large_image">
+{{ with site.Params.webmcpOriginTrial }}<meta http-equiv="origin-trial" content="{{ . }}">{{ end }}
 {{ $css := resources.Get "css/main.css" | minify }}<style>{{ $css.Content | safeCSS }}</style>
 </head>
 <body>
@@ -62,7 +63,7 @@
       <p class="note">{{ .Params.offers_note }}</p>
       <div class="grid">
         {{ range .Params.offers }}
-        <div class="card{{ if .featured }} featured{{ end }}">
+        <div class="card{{ if .featured }} featured{{ end }}" data-angebot="{{ .id }}" data-preis-eur="{{ .preis_eur }}"{{ if .zuschlag }} data-zuschlag{{ end }}>
           <h3>{{ .name }}</h3>
           <p class="duration">{{ .duration }}</p>
           <p class="price">{{ .price }}</p>
@@ -96,9 +97,12 @@
         <a class="btn primary" href="tel:{{ .Site.Params.phone | urlize }}">{{ .Site.Params.phone }}</a>
         <a class="btn" href="https://wa.me/{{ .Site.Params.whatsapp }}">WhatsApp</a>
         <a class="btn" href="mailto:{{ .Site.Params.email }}">{{ .Site.Params.email }}</a>
+        {{ if and site.Params.anfrageEndpoint (or site.Params.turnstileSitekey site.Params.anfrageOhneTurnstile) }}<a class="btn" href="#anfrage">{{ i18n "anfrage_cta" }}</a>{{ end }}
       </div>
       <p class="addr">{{ .Site.Params.address }}</p>
     </section>
+
+    {{ partial "anfrage-formular.html" . }}
   </div>
 
   <div class="teaser">
@@ -116,5 +120,12 @@
     <span><a href="{{ "impressum/" | relLangURL }}">{{ if eq .Site.Language.Lang "nl" }}Colofon{{ else if eq .Site.Language.Lang "en" }}Imprint{{ else }}Impressum{{ end }}</a> · <a href="{{ "datenschutz/" | relLangURL }}">{{ if eq .Site.Language.Lang "de" }}Datenschutz{{ else }}Privacy{{ end }}</a></span>
   </footer>
 </div>
+{{- $texte := dict -}}
+{{- range slice "e_name" "e_kontakt" "e_email" "e_telefon" "e_termin" "e_angebot" "e_personen" "e_niveau" "e_einwilligung" "s_sende" "s_ok" "s_gestoert" "s_netz" "s_zu_schnell" "s_turnstile" "s_limit" "s_abgelehnt" "s_zweiter_weg" "s_agent" -}}
+{{- $texte = merge $texte (dict . (i18n .)) -}}
+{{- end }}
+<script type="application/json" id="anfrage-cfg">{{ dict "lang" site.Language.Lang "telefon" site.Params.phone "telefonUri" (replace site.Params.phone " " "") "whatsapp" site.Params.whatsapp "datenschutz" ("datenschutz/" | relLangURL) "texte" $texte | jsonify | safeJS }}</script>
+{{- $js := resources.Get "js/anfrage.js" | minify | fingerprint }}
+<script src="{{ $js.RelPermalink }}" integrity="{{ $js.Data.Integrity }}" defer></script>
 </body>
 </html>
