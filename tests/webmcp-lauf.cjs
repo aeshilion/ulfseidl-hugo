@@ -7,6 +7,8 @@
  * plus eigene Prüfwerte unter "lauf" (Rückfall navigator.modelContext, pagehide, Anfrage-Ablauf).
  *
  *   node tests/webmcp-lauf.cjs <gebaut>/index.html <gebaut-wurzel> [--navigator] [--js=<skript>]
+ * --bedienung: statt der Werkzeuge die Formular-Bedienung durchspielen (Schalter, Karten-Knopf,
+ *   Zurücksetzen, Vollbild) — Ausgabe {bedienung:{…}}; gelesen von tests/formular-probe.py.
  * --js ersetzt das ausgelieferte Skript (Selbsttest: absichtlich kaputte Fassung von assets/js/anfrage.js).
  * jsdom wird über NODE_PATH gefunden (tests/webmcp-probe.py sucht es); ohne jsdom Exit 3.
  */
@@ -37,6 +39,11 @@ else { w.document.modelContext = mc; }
 const fetches = [];
 w.fetch = (u, o) => { fetches.push({ u, body: JSON.parse(o.body) }); return Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve('{"ok":true}') }); };
 w.HTMLElement.prototype.scrollIntoView = function () {};
+// jsdom kennt <dialog> ohne showModal/close — Attrappe wie im Browser (open-Attribut, close-Ereignis)
+if (w.HTMLDialogElement && !w.HTMLDialogElement.prototype.showModal) {
+  w.HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', ''); };
+  w.HTMLDialogElement.prototype.close = function () { this.removeAttribute('open'); this.dispatchEvent(new w.Event('close')); };
+}
 const konsole = [];
 w.console.error = (...a) => konsole.push(a.map(String).join(' '));
 
@@ -64,7 +71,72 @@ function plan(t) {
 // Jeder Aufruf mit Frist: ein Werkzeug, das auf den Menschen wartet, wo es ablehnen sollte, hängt sonst den Lauf.
 const frist = (p, ms) => Promise.race([p, new Promise(r => setTimeout(() => r({ __frist: ms }), ms))]);
 
-(async () => {
+async function bedienung() {
+  const d = w.document, f = d.getElementById('anfrage-form');
+  const b = {};
+  if (!f) { return { formular: false }; }
+  const knopf = f.querySelector('button[type=submit]'), c = f.elements.consent, hinweis = d.getElementById('af-senden-hinweis');
+  const warte = () => new Promise(r => setTimeout(r, 20));
+  // 1. Schalter
+  b.schalter_role = c.getAttribute('role');
+  b.knopf_anfangs_gesperrt = knopf.disabled;
+  b.sperrhinweis_anfangs_sichtbar = !!hinweis && !hinweis.hidden;
+  c.click(); await warte();
+  b.knopf_frei_nach_einwilligung = !knopf.disabled;
+  b.sperrhinweis_danach_weg = !!hinweis && hinweis.hidden;
+  c.click(); await warte();
+  b.knopf_wieder_gesperrt = knopf.disabled;
+  // 2. Karten-Knopf
+  const kk = d.querySelector('[data-anfragen="halbtag_privat"]');
+  b.karten_knoepfe = Array.from(d.querySelectorAll('[data-anfragen]')).map(x => x.getAttribute('data-anfragen'));
+  if (kk) {
+    const ev = new w.MouseEvent('click', { bubbles: true, cancelable: true });
+    kk.dispatchEvent(ev); await warte();
+    b.karte_waehlt = f.elements.angebot.value;
+    b.karte_fokus = d.activeElement && d.activeElement.id;
+    b.karte_standard_verhindert = ev.defaultPrevented;
+  }
+  b.drop_zone_da = !!d.getElementById('af-drop');
+  // 3. Zurücksetzen
+  const rs = f.querySelector('button[type=reset]');
+  b.zuruecksetzen_da = !!rs;
+  if (rs) {
+    f.elements.name.value = 'Erika'; f.elements.message.value = 'Hallo'; c.click(); await warte();
+    f.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true })); await warte();  // Fehler erzeugen (Termin fehlt)
+    b.fehler_vor_reset = Array.from(f.querySelectorAll('.af-fehler')).filter(x => !x.hidden).length;
+    rs.click(); await warte();
+    b.nach_reset = { name: f.elements.name.value, message: f.elements.message.value, angebot: f.elements.angebot.value, consent: c.checked,
+                     knopf_gesperrt: knopf.disabled, fehler_sichtbar: Array.from(f.querySelectorAll('.af-fehler')).filter(x => !x.hidden).length,
+                     status_versteckt: d.getElementById('anfrage-status').hidden };
+  }
+  // 4. Vollbild
+  const vb = d.getElementById('af-vollbild'), dlg = d.getElementById('af-dialog');
+  b.vollbild_da = !!vb && !!dlg;
+  if (vb && dlg) {
+    b.vollbild_knopf_sichtbar = !vb.hidden;
+    f.elements.message.value = 'kurz';
+    vb.click(); await warte();
+    const dt = dlg.querySelector('textarea');
+    b.dialog_offen = dlg.hasAttribute('open');
+    b.dialog_uebernimmt_text = dt.value === 'kurz';
+    b.dialog_fokus = d.activeElement === dt;
+    dt.value = 'Ein langer Text\nmit zwei Zeilen';
+    dlg.querySelector('[data-dialog=uebernehmen]').click(); await warte();
+    b.zurueck_im_feld = f.elements.message.value === 'Ein langer Text\nmit zwei Zeilen';
+    b.dialog_zu = !dlg.hasAttribute('open');
+    b.fokus_zurueck = d.activeElement === vb;
+    vb.click(); await warte();
+    dt.value = 'verworfen';
+    dlg.querySelector('[data-dialog=abbrechen]').click(); await warte();
+    b.abbrechen_verwirft = f.elements.message.value === 'Ein langer Text\nmit zwei Zeilen';
+  }
+  b.konsole = konsole;
+  return b;
+}
+
+if (process.argv.includes('--bedienung')) {
+  bedienung().then(b => { process.stdout.write(JSON.stringify({ bedienung: b })); process.exit(0); });
+} else (async () => {
   const werkzeuge = [];
   for (const t of angemeldet) {
     const r = { name: t.name, title: t.title, description: t.description, inputSchema: t.inputSchema, annotations: t.annotations, aufrufe: [] };

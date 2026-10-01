@@ -11,6 +11,8 @@
   Ohne Skript (noch nicht geladen, blockiert) fällt das Formular auf mailto zurück wie bei BIZ — nie auf
   GET, sonst stünden Name, Mail und Telefon in der Adresszeile (gemessen 01.10.2026 beim Test).
   Honigtopf AUSSERHALB des Formulars (Lehre aus dem EAP-Formular: Agenten sehen jedes Feld im Formular).
+  Einwilligung als Schalter (checkbox role=switch, wie Alex' Kontaktfeld auf integrations.at): „Anfrage senden“
+  bleibt gesperrt, bis er an ist — gesperrt erst durch das Skript, ohne Skript bleibt der mailto-Rückfall bedienbar.
 */ -}}
 {{- $endpoint := site.Params.anfrageEndpoint -}}
 {{- $sitekey := site.Params.turnstileSitekey -}}
@@ -83,7 +85,7 @@
       <textarea id="af-nachricht" name="message" maxlength="4000" rows="4" placeholder="{{ i18n "f_nachricht_ph" }}"></textarea>
     </div>
     <div class="af-feld af-voll af-einw">
-      <input id="af-consent" name="consent" type="checkbox" required aria-describedby="af-consent-fehler">
+      <input id="af-consent" name="consent" type="checkbox" role="switch" required aria-describedby="af-consent-fehler">
       <label for="af-consent">{{ i18n "f_einwilligung" }} <a href="{{ $ds }}">{{ i18n "f_datenschutz" }}</a>.</label>
       <p class="af-fehler" id="af-consent-fehler" hidden></p>
     </div>
@@ -91,8 +93,9 @@
     <div class="cf-turnstile af-voll" data-sitekey="{{ $sitekey }}" data-appearance="interaction-only" data-language="{{ site.Language.Lang }}"></div>
     {{- end }}
     <div class="af-fuss af-voll">
-      <button type="submit" class="btn primary">{{ i18n "f_senden" }}</button>
+      <button type="submit" class="btn primary" aria-describedby="af-senden-hinweis">{{ i18n "f_senden" }}</button>
       <span class="af-hinweis">{{ i18n "f_hinweis" }}</span>
+      <p class="af-hinweis af-sperre" id="af-senden-hinweis" hidden>{{ i18n "f_einwilligung_aus" }}</p>
     </div>
     <div id="anfrage-status" class="af-status af-voll" role="status" aria-live="polite" tabindex="-1" hidden></div>
   </form>

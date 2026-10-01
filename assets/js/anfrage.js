@@ -6,6 +6,7 @@
  *    „Angekommen“ steht NUR bei ok:true — der Server sagt ok:true erst, wenn die Eingangsmail vom
  *    Relay angenommen ist. Sonst: Meldung + zweiter Weg (Telefon/WhatsApp), Angaben bleiben stehen.
  * 2. Turnstile lädt erst bei der ersten Berührung des Formulars (api.js ist groß; Lighthouse).
+ *    Einwilligung ist ein Schalter (role=switch); „Anfrage senden“ bleibt gesperrt, bis er an ist.
  * 3. WebMCP über document.modelContext (Rückfall navigator.modelContext), Muster wie
  *    biz-automation eap-webmcp.js: eigene Eingabeprüfung (Chrome prüft enum/unbekannte Parameter
  *    nicht), jede Antwort mit ok, jeder Fehler mit recovery, AbortController auf pagehide.
@@ -43,6 +44,17 @@
     var start = Date.now();
     var wartende = [];          // Agenten-Aufrufe, die auf das Absenden durch den Menschen warten
     var tsBox = f.querySelector('.cf-turnstile'), tsP = null;
+    var consent = f.elements.consent, sendet = false;
+    var sperrHinweis = document.getElementById('af-senden-hinweis');
+    /** „Anfrage senden“ ist frei, wenn eingewilligt ist und gerade nichts gesendet wird. */
+    function knopfStand() {
+      knopf.disabled = sendet || !consent.checked;
+      if (sperrHinweis) { sperrHinweis.hidden = sendet || consent.checked; }
+    }
+    consent.addEventListener('change', knopfStand);
+    // reset() löst kein change aus — Stand danach neu setzen
+    f.addEventListener('reset', function () { setTimeout(function () { alleFehlerWeg(); knopfStand(); }, 0); });
+    knopfStand();
 
     function tsLaden() {
       if (!tsBox) { return Promise.resolve(); }
@@ -161,7 +173,7 @@
     };
 
     function absenden() {
-      knopf.disabled = true;
+      sendet = true; knopfStand();
       zeige('laeuft', esc(T.s_sende || '…'));
       return tsToken().then(function () {
         return fetch(f.getAttribute('data-endpoint'), {
@@ -192,12 +204,12 @@
         zeige('schlecht', '✕ ' + esc(T.s_netz) + zweiterWeg());
         st.focus();
         return { ok: false, error: T.s_netz, recovery: 'Die Angaben stehen noch im Formular. Direkt erreichbar: Telefon/WhatsApp ' + (CFG.telefon || '') + '.' };
-      }).then(function (r) { knopf.disabled = false; return r; });
+      }).then(function (r) { sendet = false; knopfStand(); return r; });
     }
 
     f.addEventListener('submit', function (e) {
       e.preventDefault();
-      if (knopf.disabled) { return; }
+      if (sendet) { return; }
       var fehler = pruefen();
       if (fehler.length) {
         fehlerZeigen(fehler);
