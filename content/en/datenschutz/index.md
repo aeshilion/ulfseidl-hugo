@@ -1,5 +1,6 @@
 ---
 title: "Privacy"
+description: "Privacy policy of Ulf Seidl: no cookies, no tracking. Only the request form loads Cloudflare Turnstile, and only once you use it."
 layout: legal
 ---
 ## Privacy

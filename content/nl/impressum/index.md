@@ -1,5 +1,6 @@
 ---
 title: "Colofon"
+description: "Colofon van Ulf Seidl, skileraar in Flachau: adres Stahlhammergasse 268, 5542 Flachau, telefoon en e-mail."
 layout: legal
 ---
 ## Colofon (Impressum)

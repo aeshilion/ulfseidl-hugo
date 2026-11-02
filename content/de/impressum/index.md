@@ -1,5 +1,6 @@
 ---
 title: "Impressum"
+description: "Impressum von Ulf Seidl, Skilehrer in Flachau: Anschrift Stahlhammergasse 268, 5542 Flachau, Telefon und E-Mail."
 layout: legal
 ---
 ## Angaben gemäß § 5 ECG / § 63 GewO

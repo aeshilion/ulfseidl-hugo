@@ -1,5 +1,6 @@
 ---
 title: "Datenschutz"
+description: "Datenschutzerklärung von Ulf Seidl: keine Cookies, kein Tracking. Nur das Anfrageformular lädt Cloudflare Turnstile, und erst bei Nutzung."
 layout: legal
 ---
 ## Datenschutzerklärung

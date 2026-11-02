@@ -1,5 +1,6 @@
 ---
 title: "Legal notice"
+description: "Legal notice for Ulf Seidl, ski instructor in Flachau: address Stahlhammergasse 268, 5542 Flachau, phone and e-mail."
 layout: legal
 ---
 ## Legal notice (Impressum)
