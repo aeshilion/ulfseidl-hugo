@@ -10,6 +10,8 @@
 <title>{{ .Title }} — Ulf Seidl</title>
 <link rel="icon" href="/favicon.ico" sizes="any"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
 {{ $css := resources.Get "css/main.css" | minify }}<style>{{ $css.Content | safeCSS }}</style>
+{{ $ld := dict "@context" "https://schema.org" "@type" "WebPage" "name" .Title "description" .Description "url" .Permalink "inLanguage" .Site.Language.Lang "isPartOf" (dict "@type" "WebSite" "name" .Site.Title "url" .Site.Home.Permalink) "publisher" (dict "@type" "Person" "name" "Ulf Seidl") }}
+<script type="application/ld+json">{{ $ld | jsonify | safeJS }}</script>
 </head>
 <body>
 <div class="topbar"><a href="tel:{{ .Site.Params.phone | urlize }}">⛷ {{ if eq .Site.Language.Lang "nl" }}Boek nu uw privéles: {{ else if eq .Site.Language.Lang "en" }}Book your private lesson: {{ else }}Jetzt Privatstunde sichern: {{ end }}{{ .Site.Params.phone }}</a></div>
@@ -26,6 +28,7 @@
   <footer>
     <span>© {{ now.Year }} Ulf Seidl · Flachau</span>
     <span>{{ .Site.Params.phone }} · {{ .Site.Params.email }}</span>
+    <span>{{ with .Site.GetPage "/impressum" }}<a href="{{ .RelPermalink }}">{{ if eq $.Site.Language.Lang "en" }}Legal notice{{ else if eq $.Site.Language.Lang "nl" }}Colofon{{ else }}Impressum{{ end }}</a>{{ end }} · {{ with .Site.GetPage "/datenschutz" }}<a href="{{ .RelPermalink }}">{{ if eq $.Site.Language.Lang "en" }}Privacy{{ else if eq $.Site.Language.Lang "nl" }}Privacyverklaring{{ else }}Datenschutz{{ end }}</a>{{ end }}</span>
   </footer>
 </div>
 </body>
