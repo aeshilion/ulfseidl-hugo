@@ -172,8 +172,7 @@ def statisch(b, daten, fehler):
         pruef(norm_ws(daten["fruehbucher"]["text"][s]) in seitentext(h), f"{s}: Frühbucherrabatt fehlt auf der Seite")
         # Formular-Auswahl
         for a in angebote:
-            if True:
-                pruef(f"{a['name'][s]} · € {a['preis_eur']}" in htmlmod.unescape(h), f"{s}: Formular-Auswahl ohne „{a['name'][s]} · € {a['preis_eur']}“")
+            pruef(f"{a['name'][s]} · € {a['preis_eur']}" in htmlmod.unescape(h), f"{s}: Formular-Auswahl ohne „{a['name'][s]} · € {a['preis_eur']}“")
         # Jeder sichtbare Euro-Betrag ist ein Katalogpreis
         sichtbar = {int(x) for x in re.findall(r"€\s?(\d+)", text_aus_html(h))}
         pruef(sichtbar <= betraege, f"{s}: Euro-Beträge auf der Seite ohne Katalogpreis: {sorted(sichtbar - betraege)}")

@@ -13,7 +13,8 @@
   {{- $o = merge $o (dict "itemOffered" (dict "@type" "Service" "name" (index .name $L) "provider" (dict "@id" (printf "%s#betrieb" $web)))) -}}
   {{- $o = merge $o (dict "priceSpecification" (slice
         (dict "@type" "UnitPriceSpecification" "price" .preis_eur "priceCurrency" $d.waehrung)
-        (dict "@type" "UnitPriceSpecification" "price" .aufpreis_eur "priceCurrency" $d.waehrung "name" (i18n "k_aufpreis" (dict "preis" .aufpreis_eur))))) -}}
+        (dict "@type" "UnitPriceSpecification" "price" .aufpreis_eur "priceCurrency" $d.waehrung "name" (i18n "k_aufpreis" (dict "preis" .aufpreis_eur))
+          "referenceQuantity" (dict "@type" "QuantitativeValue" "value" 1 "unitText" (i18n "k_weitere_person"))))) -}}
   {{- $preise = $preise | append .preis_eur -}}
   {{- $angebote = $angebote | append $o -}}
 {{- end -}}

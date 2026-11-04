@@ -94,7 +94,7 @@ fruehbucher:
   text:
     de: "Frühbucherrabatt: minus 5 % bei Buchung bzw. Reservierung bis 45 Tage im Voraus."
     en: "Early booking discount: 5 % off when you book or reserve at least 45 days in advance."
-    nl: "Vroegboekkorting: 5 % korting bij boeking of reservering tot 45 dagen van tevoren."
+    nl: "Vroegboekkorting: 5 % korting bij boeking of reservering uiterlijk 45 dagen van tevoren."
 
 saison:
   von_monat: 12

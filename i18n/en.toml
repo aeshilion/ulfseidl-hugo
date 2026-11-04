@@ -59,3 +59,4 @@ d_abbrechen = "Cancel"
 
 # Angebotskarte (layouts/index.html): Aufpreis je weiterer Person
 k_aufpreis = "+ € {{ .preis }} per additional person"
+k_weitere_person = "per additional person"
