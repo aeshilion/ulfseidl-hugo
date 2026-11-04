@@ -34,20 +34,22 @@
       "id" .id
       "name" .name.de
       "namen" .name
-      "aufpreis_je_person" (eq .zuschlag true)
+      "aufpreis_je_weitere_person_eur" .aufpreis_eur
       "dauer" .dauer.de
       "preis_eur" .preis_eur
       "preis_text" (partial "preis.html" . | plainify | htmlUnescape)
+      "aufpreis_text" (printf "jede weitere Person + € %d" .aufpreis_eur)
+      "formularwert" .wert
       "beschreibung" .text.de
   -}}
   {{- with .dauer_minuten }}{{ $e = merge $e (dict "dauer_minuten" .) }}{{ end -}}
   {{- with .dauer_minuten_bis }}{{ $e = merge $e (dict "dauer_minuten_hoechstens" .) }}{{ end -}}
-  {{- if not .zuschlag }}{{ $e = merge $e (dict "formularwert" .wert) }}{{ $anfrageIds = $anfrageIds | append .id }}{{ end -}}
+  {{- $anfrageIds = $anfrageIds | append .id -}}
   {{- $angebote = $angebote | append $e -}}
   {{- $angebotIds = $angebotIds | append .id -}}
 {{- end -}}
 {{- $anfrageIds = $anfrageIds | append "noch_offen" -}}
-{{- $zuschlag := index (where $d.angebote "zuschlag" true) 0 -}}
+{{- $fb := dict "prozent" $d.fruehbucher.prozent "tage_vorher" $d.fruehbucher.tage_vorher "text" $d.fruehbucher.text.de -}}
 
 {{- $saisonText := strings.TrimPrefix "Saison " $d.saison.text.de -}}
 {{- $saison := dict "zeitraum" $saisonText "von_monat" $d.saison.von_monat "bis_monat" $d.saison.bis_monat "kurzfristig" $d.saison.kurzfristig
@@ -73,15 +75,20 @@
 {{- $ablauf := slice -}}{{- range $d.bedingungen.ablauf }}{{ $ablauf = $ablauf | append . }}{{ end -}}
 {{- $regeln := dict -}}
 {{- range $k, $v := $d.bedingungen }}{{ if and (ne $k "ablauf") $v }}{{ $regeln = merge $regeln (dict $k $v) }}{{ end }}{{ end -}}
+{{- $regeln = merge $regeln (dict "fruehbucherrabatt" $d.fruehbucher.text.de) -}}
 
 {{- /* Preis-Antwort aus den Angebotsdaten (die Probe prüft sie gegen die Karten der Seite) */ -}}
 {{- $preisAntwort := slice -}}
-{{- range $d.angebote }}{{ $preisAntwort = $preisAntwort | append (printf "%s (%s): %s." .name.de .dauer.de (partial "preis.html" . | plainify | htmlUnescape)) }}{{ end -}}
+{{- range $d.angebote }}{{ $preisAntwort = $preisAntwort | append (printf "%s (%s): %s, jede weitere Person + € %d." .name.de .dauer.de (partial "preis.html" . | plainify | htmlUnescape) .aufpreis_eur) }}{{ end -}}
+{{- $preisAntwort = $preisAntwort | append $d.fruehbucher.text.de -}}
+{{- $aufpreisAntwort := slice -}}
+{{- range $d.angebote }}{{ $aufpreisAntwort = $aufpreisAntwort | append (printf "%s: jede weitere Person + € %d." .name.de .aufpreis_eur) }}{{ end -}}
 {{- $faqs := slice -}}
 {{- range (append $d.kundenfragen $d.faqs) -}}
   {{- $teile := slice -}}
   {{- if .aus_angeboten }}{{ $teile = $preisAntwort }}{{ else -}}
     {{- range .antwort }}{{ $teile = $teile | append (cond (findRE `[.!?]$` .) . (printf "%s." .)) }}{{ end -}}
+    {{- if .aus_aufpreisen }}{{ $teile = $teile | append $aufpreisAntwort }}{{ end -}}
   {{- end -}}
   {{- $faqs = $faqs | append (dict "frage" .frage "antwort" (delimit $teile " ")) -}}
 {{- end -}}
@@ -110,7 +117,7 @@
     "anbieter" (dict "name" $d.anbieter.name "rolle" $d.anbieter.rolle "titel" $d.anbieter.titel "beschreibung" $d.anbieter.beschreibung "website" $web "adresse" $adresseText "sprachen_seite" $d.anbieter.sprachen_seite)
     "angebote" (dict "anbieter" $d.anbieter.titel "waehrung" $d.waehrung "personen_max" $d.personen_max "angebote" $angebote
                      "hinweis" (printf "%s · %s" $d.saison.text.de $d.treffpunkt.text.de))
-    "preise_und_bedingungen" (dict "waehrung" $d.waehrung "preise" $angebote "aufpreis_je_weitere_person_eur" $zuschlag.preis_eur "personen_max" $d.personen_max
+    "preise_und_bedingungen" (dict "waehrung" $d.waehrung "preise" $angebote "fruehbucher" $fb "personen_max" $d.personen_max
                      "ablauf" $ablauf "regeln" $regeln "offen_bei_ulf" $offen "offen_hinweis" $offenHinweis)
     "faqs" (dict "faqs" $faqs)
     "treffpunkt" (merge $treff (dict "offen_bei_ulf" (intersect $offen (slice "Genauer Treffpunkt, Anfahrt und Parken"))))

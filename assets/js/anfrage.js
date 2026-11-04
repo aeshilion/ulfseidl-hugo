@@ -407,7 +407,8 @@
       if (!e) { return { error: 'Unbekannte id: ' + JSON.stringify(a.id) + '.', validValues: liste.map(function (x) { return x.id; }) }; }
       return {
         angebot: kopie(e), waehrung: KAT.angebote.waehrung, personen_max: KAT.angebote.personen_max,
-        aufpreis_je_weitere_person_eur: KAT.preise_und_bedingungen.aufpreis_je_weitere_person_eur,
+        aufpreis_je_weitere_person_eur: e.aufpreis_je_weitere_person_eur,
+        fruehbucher: kopie(KAT.preise_und_bedingungen.fruehbucher),
         saison: KAT.saison.zeitraum, treffpunkt: KAT.treffpunkt.treffpunkt
       };
     },
@@ -423,7 +424,7 @@
       var st = staemme(a.suchbegriff);
       var kandidaten = [];
       KAT.faqs.faqs.forEach(function (f) { kandidaten.push({ bereich: 'Haeufige Frage', titel: f.frage, text: f.antwort, werkzeug: 'list_faqs' }); });
-      KAT.angebote.angebote.forEach(function (x) { kandidaten.push({ bereich: 'Angebot', titel: x.name, text: x.dauer + ', ' + x.preis_text + '. ' + x.beschreibung, werkzeug: 'get_angebot', id: x.id }); });
+      KAT.angebote.angebote.forEach(function (x) { kandidaten.push({ bereich: 'Angebot', titel: x.name, text: x.dauer + ', ' + x.preis_text + ', ' + x.aufpreis_text + '. ' + x.beschreibung, werkzeug: 'get_angebot', id: x.id }); });
       (KAT.preise_und_bedingungen.ablauf || []).forEach(function (t) { kandidaten.push({ bereich: 'Ablauf', titel: 'Ablauf', text: t, werkzeug: 'get_preise_und_bedingungen' }); });
       var r = KAT.preise_und_bedingungen.regeln || {};
       Object.keys(r).forEach(function (k) { kandidaten.push({ bereich: 'Bedingungen', titel: k, text: r[k], werkzeug: 'get_preise_und_bedingungen' }); });

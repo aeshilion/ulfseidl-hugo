@@ -43,47 +43,58 @@ personen_max: 4
 
 # Angebotskarten (Reihenfolge = Reihenfolge auf der Seite). `wert` ist der Formularwert und muss
 # wörtlich in THEMEN_LISTE der contact-api-Instanz stehen (projekt-entwicklung-contact-api/deploy/ulf/).
+# `aufpreis_eur` = Aufpreis je weiterer Person für dieses Angebot (bis personen_max).
+# Preise laut Ulf (Nachricht vom 04.11.2026); vorher Schnupperstunde 75, Halbtag 195, Ganztag 320, je Person + 15.
 angebote:
-  - id: "schnupperstunde"
-    wert: "Schnupperstunde"
-    preis_eur: 75
-    dauer_minuten: 55
-    name: { de: "Schnupperstunde", en: "Taster lesson", nl: "Proefles" }
-    dauer: { de: "55 Minuten", en: "55 minutes", nl: "55 minuten" }
+  - id: "zwei_stunden"
+    wert: "2 Stunden"
+    preis_eur: 198
+    aufpreis_eur: 25
+    dauer_minuten: 120
+    name: { de: "2 Stunden", en: "2 hours", nl: "2 uur" }
+    dauer: { de: "von 9 bis 11 Uhr", en: "from 9 to 11 am", nl: "van 9 tot 11 uur" }
     text:
       de: "Ideal zum Kennenlernen oder für gezieltes Technik-Feintuning."
       en: "Perfect to get started or for focused technique fine-tuning."
       nl: "Ideaal om kennis te maken of om gericht aan uw techniek te werken."
-  - id: "halbtag_privat"
-    wert: "Halbtag privat"
-    preis_eur: 195
+  - id: "drei_stunden"
+    wert: "3 Stunden"
+    preis_eur: 279
+    aufpreis_eur: 30
     dauer_minuten: 180
     featured: true
-    name: { de: "Halbtag privat", en: "Private half day", nl: "Halve dag privé" }
-    dauer: { de: "3 Stunden", en: "3 hours", nl: "3 uur" }
+    name: { de: "3 Stunden", en: "3 hours", nl: "3 uur" }
+    dauer: { de: "von 9 bis 12 Uhr", en: "from 9 am to 12 noon", nl: "van 9 tot 12 uur" }
     text:
-      de: "Der Klassiker: genug Zeit für echte Fortschritte — vormittags oder nachmittags."
-      en: "The classic: enough time for real progress — mornings or afternoons."
-      nl: "De klassieker: genoeg tijd voor echte vooruitgang — 's ochtends of 's middags."
-  - id: "ganztag_privat"
-    wert: "Ganztag privat"
-    preis_eur: 320
-    dauer_minuten_bis: 360
-    name: { de: "Ganztag privat", en: "Private full day", nl: "Hele dag privé" }
-    dauer: { de: "bis 6 Stunden", en: "up to 6 hours", nl: "tot 6 uur" }
+      de: "Der Klassiker: genug Zeit für echte Fortschritte."
+      en: "The classic: enough time for real progress."
+      nl: "De klassieker: genoeg tijd voor echte vooruitgang."
+  - id: "vier_stunden"
+    wert: "4 Stunden"
+    preis_eur: 356
+    aufpreis_eur: 35
+    dauer_minuten: 240
+    name: { de: "4 Stunden", en: "4 hours", nl: "4 uur" }
+    dauer: { de: "von 9 bis 14 Uhr mit einer Stunde Pause", en: "from 9 am to 2 pm with a one-hour break", nl: "van 9 tot 14 uur met een uur pauze" }
     text:
-      de: "Ein ganzer Tag nur für Sie: Technik, Geheimtipps und die schönsten Abfahrten der Region."
-      en: "A whole day just for you: technique, local secrets and the region's finest runs."
-      nl: "Een hele dag alleen voor u: techniek, lokale tips en de mooiste afdalingen van de regio."
-  - id: "weitere_person"
-    zuschlag: true
-    preis_eur: 15
-    name: { de: "Weitere Person", en: "Additional person", nl: "Extra persoon" }
-    dauer: { de: "je Person", en: "per person", nl: "per persoon" }
-    text:
-      de: "Familie oder Freunde auf ähnlichem Niveau? Gerne bis 4 Personen."
-      en: "Family or friends at a similar level? Up to 4 people welcome."
-      nl: "Familie of vrienden van vergelijkbaar niveau? Tot 4 personen welkom."
+      de: "Technik, Geheimtipps und die schönsten Abfahrten der Region."
+      en: "Technique, local secrets and the region's finest runs."
+      nl: "Techniek, lokale tips en de mooiste afdalingen van de regio."
+
+# Mehrere Personen: Satz unter den Karten (stand bis 04.11.2026 auf der Karte „Weitere Person“).
+mehrere_personen:
+  de: "Familie oder Freunde auf ähnlichem Niveau? Gerne bis 4 Personen."
+  en: "Family or friends at a similar level? Up to 4 people welcome."
+  nl: "Familie of vrienden van vergelijkbaar niveau? Tot 4 personen welkom."
+
+# Frühbucherrabatt (Ulf, 04.11.2026). Der deutsche Satz steht wörtlich auf der Seite und als Regel im Katalog.
+fruehbucher:
+  prozent: 5
+  tage_vorher: 45
+  text:
+    de: "Frühbucherrabatt: minus 5 % bei Buchung bzw. Reservierung bis 45 Tage im Voraus."
+    en: "Early booking discount: 5 % off when you book or reserve at least 45 days in advance."
+    nl: "Vroegboekkorting: 5 % korting bij boeking of reservering tot 45 dagen van tevoren."
 
 saison:
   von_monat: 12
@@ -152,7 +163,8 @@ faqs:
   - frage: "Für wen ist der Unterricht geeignet?"
     antwort: ["Kinder, Erwachsene, Wiedereinsteiger — jedes Alter, jedes Niveau", "Vom ersten Pflugbogen bis zum Carving auf der schwarzen Piste"]
   - frage: "Können mehrere Personen gemeinsam Unterricht nehmen?"
-    antwort: ["Familie oder Freunde auf ähnlichem Niveau? Gerne bis 4 Personen.", "Jede weitere Person + € 15, bis 4 Personen."]
+    antwort: ["Familie oder Freunde auf ähnlichem Niveau? Gerne bis 4 Personen."]
+    aus_aufpreisen: true      # hängt je Angebot „<Name>: jede weitere Person + € n.“ an (aus den Angebotsdaten oben)
   - frage: "In welcher Sprache wird unterrichtet?"
     antwort: ["Deutsch und Englisch"]
   - frage: "Kann ich kurzfristig buchen?"

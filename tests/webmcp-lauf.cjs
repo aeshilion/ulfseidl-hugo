@@ -87,7 +87,7 @@ async function bedienung() {
   c.click(); await warte();
   b.knopf_wieder_gesperrt = knopf.disabled;
   // 2. Karten-Knopf
-  const kk = d.querySelector('[data-anfragen="halbtag_privat"]');
+  const kk = d.querySelector('[data-anfragen="drei_stunden"]');
   b.karten_knoepfe = Array.from(d.querySelectorAll('[data-anfragen]')).map(x => x.getAttribute('data-anfragen'));
   if (kk) {
     const ev = new w.MouseEvent('click', { bubbles: true, cancelable: true });
@@ -155,7 +155,7 @@ if (process.argv.includes('--bedienung')) {
   const t = angemeldet.find(x => x.name === 'privatstunde_anfragen');
   if (t) {
     anfrage.vorhanden = true;
-    const basis = { name: 'Erika Muster', email: 'erika@example.test', wunschtermin: '14.-16. Februar 2027', angebot: 'halbtag_privat', personen: 2, niveau: 'anfaenger', einwilligung: true };
+    const basis = { name: 'Erika Muster', email: 'erika@example.test', wunschtermin: '14.-16. Februar 2027', angebot: 'drei_stunden', personen: 2, niveau: 'anfaenger', einwilligung: true };
     anfrage.ohne_einwilligung = await frist(t.execute(Object.assign({}, basis, { einwilligung: false }), {}), 3000);
     anfrage.unbekannt = await frist(t.execute(Object.assign({}, basis, { rabatt: 1 }), {}), 3000);
     let fertig = null;

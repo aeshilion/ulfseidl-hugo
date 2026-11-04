@@ -26,7 +26,7 @@ import glob, json, os, re, shutil, subprocess, sys, tempfile, pathlib
 from html.parser import HTMLParser
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
-THEMEN = ["Schnupperstunde", "Halbtag privat", "Ganztag privat", "Noch offen"]
+THEMEN = ["2 Stunden", "3 Stunden", "4 Stunden", "Noch offen"]
 SPRACHEN = {"de": "", "en": "en/", "nl": "nl/"}
 fehler = []
 verfehlt = []   # Selbsttest: Mutationen der Bedienung, die NICHT rot wurden
@@ -66,7 +66,7 @@ def pruef(bed, text):
 def html_pruefen(html, sprache, mit_formular):
     b = Baum(); b.feed(html)
     karten = [e for e in b.el if e.get("data-angebot")]
-    pruef(len(karten) == 4, f"{sprache}: {len(karten)} Angebotskarten mit data-angebot, erwartet 4")
+    pruef(len(karten) == 3, f"{sprache}: {len(karten)} Angebotskarten mit data-angebot, erwartet 3")
     pruef(all(re.fullmatch(r"\d+", e.get("data-preis-eur") or "") for e in karten), f"{sprache}: data-preis-eur fehlt/keine Zahl")
     anfrage = [f for f in b.forms if f.get("id") == "anfrage-form"]
     knoepfe = [e for e in b.el if e.get("data-anfragen")]
@@ -122,7 +122,7 @@ def bedienung_statisch(b, html, sprache):
     pruef(sub and "af-senden-hinweis" in (sub[0].get("aria-describedby") or ""), f"{sprache}: Sperr-Hinweis nicht per aria-describedby am Knopf")
     t = i18n(sprache)
     kn = re.findall(r'<a class="btn karte-anfragen" href=#anfrage data-anfragen=(\w+) aria-label="([^"]+)">([^<]+)</a>', html)
-    pruef([k[0] for k in kn] == ["schnupperstunde", "halbtag_privat", "ganztag_privat"], f"{sprache}: „Anfragen“-Knöpfe {[k[0] for k in kn]}")
+    pruef([k[0] for k in kn] == ["zwei_stunden", "drei_stunden", "vier_stunden"], f"{sprache}: „Anfragen“-Knöpfe {[k[0] for k in kn]}")
     for _, aria, sichtbar in kn:
         pruef(sichtbar == t["k_anfragen"] and sichtbar.lower() in aria.lower(), f"{sprache}: Knopf-Name {aria!r} enthält den sichtbaren Text {sichtbar!r} nicht (WCAG 2.5.3)")
     rs = [e for e in b.el if e["_tag"] == "button" and e.get("type") == "reset" and e["_imform"]]
@@ -175,8 +175,8 @@ def bedienung_laufzeit(wurzel, sprache, js=None):
           f"{sprache}: Vollbild öffnet nicht richtig: { {k: b.get(k) for k in ('vollbild_knopf_sichtbar', 'dialog_offen', 'dialog_uebernimmt_text', 'dialog_fokus')} }")
     pruef(b.get("zurueck_im_feld") and b.get("dialog_zu") and b.get("fokus_zurueck") and b.get("abbrechen_verwirft"),
           f"{sprache}: Vollbild trägt nicht zurück / Fokus / Abbrechen: { {k: b.get(k) for k in ('zurueck_im_feld', 'dialog_zu', 'fokus_zurueck', 'abbrechen_verwirft')} }")
-    pruef(b.get("karten_knoepfe") == ["schnupperstunde", "halbtag_privat", "ganztag_privat"], f"{sprache}: Karten-Knöpfe {b.get('karten_knoepfe')}")
-    pruef(b.get("karte_waehlt") == "Halbtag privat" and b.get("karte_fokus") == "af-angebot" and b.get("karte_standard_verhindert"),
+    pruef(b.get("karten_knoepfe") == ["zwei_stunden", "drei_stunden", "vier_stunden"], f"{sprache}: Karten-Knöpfe {b.get('karten_knoepfe')}")
+    pruef(b.get("karte_waehlt") == "3 Stunden" and b.get("karte_fokus") == "af-angebot" and b.get("karte_standard_verhindert"),
           f"{sprache}: „Anfragen“ wählt nicht vor/fokussiert nicht ({b.get('karte_waehlt')}, {b.get('karte_fokus')})")
     pruef(not b.get("konsole"), f"{sprache}: Konsolenfehler {b.get('konsole')}")
 

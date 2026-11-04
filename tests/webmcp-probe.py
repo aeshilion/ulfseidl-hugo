@@ -112,7 +112,8 @@ def statisch(b, daten, fehler):
 
     erwartet = LESEN + (["list_stimmen"] if daten.get("stimmen") else []) + SCHREIBEN
     angebote = daten["angebote"]
-    preis_text = {a["id"]: ("+ " if a.get("zuschlag") else "") + f"€ {a['preis_eur']}" for a in angebote}
+    preis_text = {a["id"]: f"€ {a['preis_eur']}" for a in angebote}
+    betraege = {a["preis_eur"] for a in angebote} | {a["aufpreis_eur"] for a in angebote}   # Preis + Aufpreis je weiterer Person
 
     try:
         wj = json.loads(b["webmcp"])
@@ -163,17 +164,19 @@ def statisch(b, daten, fehler):
             pruef(ga["inputSchema"]["properties"]["id"].get("enum") == [a["id"] for a in angebote], f"{s}: get_angebot enum ≠ ids in data/ulf.yaml")
 
         # Preise: Karten = Daten
-        karten = re.findall(r'<div class=(?:card|"card[^"]*") data-angebot=(\S+?) data-preis-eur=(\d+)[^>]*>.*?<p class=price>([^<]*)</p>', h, re.S)
-        pruef([(i, int(p)) for i, p, _ in karten] == [(a["id"], a["preis_eur"]) for a in angebote], f"{s}: Karten {[(i, p) for i, p, _ in karten]} ≠ data/ulf.yaml")
-        for i, _, t in karten:
+        karten = re.findall(r'<div class=(?:card|"card[^"]*") data-angebot=(\S+?) data-preis-eur=(\d+) data-aufpreis-eur=(\d+)[^>]*>.*?<p class=price>([^<]*)</p>\s*<p class=aufpreis>([^<]*)</p>', h, re.S)
+        pruef([(i, int(p), int(z)) for i, p, z, _, _ in karten] == [(a["id"], a["preis_eur"], a["aufpreis_eur"]) for a in angebote], f"{s}: Karten {[(i, p, z) for i, p, z, _, _ in karten]} ≠ data/ulf.yaml")
+        for i, _, z, t, zt in karten:
             pruef(htmlmod.unescape(t).strip() == preis_text.get(i), f"{s}: Karte {i} zeigt {t!r}, Daten sagen {preis_text.get(i)!r}")
+            pruef(htmlmod.unescape(zt).strip().startswith(f"+ € {z} "), f"{s}: Karte {i} Aufpreis {zt!r} ≠ + € {z}")
+        pruef(norm_ws(daten["fruehbucher"]["text"][s]) in seitentext(h), f"{s}: Frühbucherrabatt fehlt auf der Seite")
         # Formular-Auswahl
         for a in angebote:
-            if not a.get("zuschlag"):
+            if True:
                 pruef(f"{a['name'][s]} · € {a['preis_eur']}" in htmlmod.unescape(h), f"{s}: Formular-Auswahl ohne „{a['name'][s]} · € {a['preis_eur']}“")
         # Jeder sichtbare Euro-Betrag ist ein Katalogpreis
         sichtbar = {int(x) for x in re.findall(r"€\s?(\d+)", text_aus_html(h))}
-        pruef(sichtbar <= {a["preis_eur"] for a in angebote}, f"{s}: Euro-Beträge auf der Seite ohne Katalogpreis: {sorted(sichtbar - {a['preis_eur'] for a in angebote})}")
+        pruef(sichtbar <= betraege, f"{s}: Euro-Beträge auf der Seite ohne Katalogpreis: {sorted(sichtbar - betraege)}")
         # JSON-LD
         try:
             ld = jsonld(h)
@@ -191,7 +194,7 @@ def statisch(b, daten, fehler):
         return
     K = kat_de["katalog"]
     pruef(json.loads(json.dumps(wj.get("katalog"))) == K, "/webmcp.json-Katalog ≠ eingebetteter Katalog")
-    pruef([(a["id"], a["preis_eur"]) for a in K["angebote"]["angebote"]] == [(a["id"], a["preis_eur"]) for a in angebote], "Katalog-Preise ≠ data/ulf.yaml")
+    pruef([(a["id"], a["preis_eur"], a["aufpreis_je_weitere_person_eur"]) for a in K["angebote"]["angebote"]] == [(a["id"], a["preis_eur"], a["aufpreis_eur"]) for a in angebote], "Katalog-Preise ≠ data/ulf.yaml")
     for x in (json.dumps(kat_de), b["webmcp"], b["llms"]):
         pruef("TODO" not in x, "„TODO“ in Katalog, webmcp.json oder llms.txt")
     pruef(not any(v == "" for v in blaetter(K)), "leerer Wert im Katalog (leere TODO-Felder sollen wegfallen)")
@@ -199,9 +202,10 @@ def statisch(b, daten, fehler):
     # llms.txt
     L = b["llms"]
     for a in angebote:
-        pruef(f"{a['name']['de']}: {a['dauer']['de']}, {preis_text[a['id']]}" in L, f"llms.txt: Preiszeile {a['name']['de']} fehlt oder weicht ab")
+        pruef(f"{a['name']['de']}: {a['dauer']['de']}, {preis_text[a['id']]}, jede weitere Person + € {a['aufpreis_eur']}" in L, f"llms.txt: Preiszeile {a['name']['de']} fehlt oder weicht ab")
+    pruef(daten["fruehbucher"]["text"]["de"] in L, "llms.txt: Frühbucherrabatt fehlt")
     sichtbar_llms = {int(x) for x in re.findall(r"€\s?(\d+)", L)}
-    pruef(sichtbar_llms <= {a["preis_eur"] for a in angebote}, f"llms.txt: Euro-Beträge ohne Katalogpreis {sorted(sichtbar_llms)}")
+    pruef(sichtbar_llms <= betraege, f"llms.txt: Euro-Beträge ohne Katalogpreis {sorted(sichtbar_llms)}")
     for n in [w["name"] for w in kat_de["werkzeuge"]]:
         pruef(f"`{n}`" in L, f"llms.txt nennt Werkzeug {n} nicht")
     for f in daten["faqs"]:
@@ -338,6 +342,8 @@ def struktur_woerter(daten, werkzeuge):
             for x in v:
                 schluessel(x)
     schluessel(daten)
+    for a in daten.get("angebote", []):                               # Angebots-ids sind Kennungen (enum), keine Aussage
+        w |= {falten(x) for x in a["id"].split("_")}
     for o in daten.get("offen_bei_ulf", []):
         w |= woerter(o["thema"])
     for f in daten.get("faqs", []) + daten.get("kundenfragen", []):
@@ -383,6 +389,7 @@ def zitate(daten):
     z += [v for k, v in daten["bedingungen"].items() if k != "ablauf" and v]       # von Ulf gefüllt → muss auf die Seite
     z += [y for f in daten["faqs"] + daten.get("kundenfragen", []) for y in f.get("antwort", [])]
     z += [x.get("text", "") for x in daten.get("stimmen", [])]
+    z += [daten["fruehbucher"]["text"]["de"]]
     return [x for x in z if x]
 
 
@@ -445,8 +452,8 @@ def laufzeit(wurzel, daten, fehler, messung_ziel=None, js=None):
             pruef((an.get("ohne_einwilligung") or {}).get("ok") is False, f"jsdom ({art}): Anfrage ohne Einwilligung nicht abgelehnt")
             pruef((an.get("unbekannt") or {}).get("ok") is False, f"jsdom ({art}): Anfrage mit fremdem Parameter nicht abgelehnt")
             pruef(an.get("fetch_vor_klick") == 0 and an.get("antwort_vor_klick") is None, f"jsdom ({art}): GESENDET ohne Klick des Menschen (fetch {an.get('fetch_vor_klick')})")
-            pruef(an.get("formular", {}).get("angebot") == "Halbtag privat" and an.get("formular", {}).get("consent") is True, f"jsdom ({art}): Formular nicht ausgefüllt {an.get('formular')}")
-            pruef(an.get("fetch_nach_klick") == 1 and an.get("topic") == "Halbtag privat", f"jsdom ({art}): nach dem Klick nicht genau einmal gesendet")
+            pruef(an.get("formular", {}).get("angebot") == "3 Stunden" and an.get("formular", {}).get("consent") is True, f"jsdom ({art}): Formular nicht ausgefüllt {an.get('formular')}")
+            pruef(an.get("fetch_nach_klick") == 1 and an.get("topic") == "3 Stunden", f"jsdom ({art}): nach dem Klick nicht genau einmal gesendet")
             pruef((an.get("antwort") or {}).get("gesendet") is True, f"jsdom ({art}): Agent bekommt kein gesendet:true")
         if messung_ziel and art == "document":
             pathlib.Path(messung_ziel).write_text(json.dumps(m))
@@ -484,15 +491,15 @@ def mutationen(b):
     kopf_erfunden = dict(b, webmcp=json.dumps(wj3))
     ohne_beleg = json.loads(json.dumps(k)); ohne_beleg["katalog"]["kontakt"]["hinweis"] += " Ueber die Website wird nichts verbindlich gebucht."
     return {
-        "Kartenpreis weicht ab": ersetze("home_de", "<p class=price>€ 195</p>", "<p class=price>€ 190</p>"),
+        "Kartenpreis weicht ab": ersetze("home_de", "<p class=price>€ 279</p>", "<p class=price>€ 270</p>"),
         "erfundener Preis auf der Seite": ersetze("home_en", "</h3>", "</h3><p>from € 59</p>"),
         "Beschreibung zu kurz": katalog(kurz),
         "Schema ohne additionalProperties": katalog(ohne_ap),
         "Werkzeug fehlt in webmcp.json": dict(b, webmcp=json.dumps(wj)),
         "TODO sickert in llms.txt": ersetze("llms", "## Kontakt", "## Kontakt\n- Storno: TODO Ulf"),
-        "Preis in llms.txt weicht ab": ersetze("llms", "€ 320", "€ 300"),
+        "Preis in llms.txt weicht ab": ersetze("llms", "€ 356", "€ 350"),
         "Beleg fehlt auf der Seite": ersetze("home_de", "seit über drei Jahrzehnten", "seit Jahren"),
-        "JSON-LD-Preis weicht ab": ersetze("home_nl", '"price":75', '"price":70'),
+        "JSON-LD-Preis weicht ab": ersetze("home_nl", '"price":198', '"price":190'),
         "Aussage ohne Beleg im Katalog (kontakt.hinweis)": katalog(ohne_beleg),
         "JSON-LD behauptet founder": ersetze("home_de", '"@type":"SportsActivityLocation"', '"@type":"SportsActivityLocation","founder":{"@type":"Person","name":"Ulf Seidl"}'),
         "JSON-LD-Aussage ohne Beleg": ersetze("home_en", '"@type":"SportsActivityLocation"', '"@type":"SportsActivityLocation","slogan":"Best ski school in Austria"'),

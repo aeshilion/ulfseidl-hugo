@@ -64,7 +64,10 @@ p{margin-bottom:12px}
 .card.featured{border-top-color:var(--rot);background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.13)}
 .card h3{font-size:17px;color:#222;font-weight:700}
 .duration{color:var(--grau);font-size:13.5px;margin:2px 0 8px}
-.price{font-size:29px;font-weight:700;color:var(--rot);margin-bottom:8px}
+.price{font-size:29px;font-weight:700;color:var(--rot);margin-bottom:2px}
+.aufpreis{font-size:13.5px;color:#333;margin-bottom:8px}
+.offers .note.mehrere{margin:16px 0 4px}
+.offers .note.fruehbucher{margin:0;font-weight:700;color:#333}
 .card{display:flex;flex-direction:column}
 .card>p:last-of-type{font-size:14px;color:#555;margin:0 0 16px}
 .karte-anfragen{align-self:flex-start;margin-top:auto;min-height:44px;line-height:26px}

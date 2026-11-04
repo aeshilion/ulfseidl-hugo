@@ -10,7 +10,7 @@
 #  Platzhalter, die layouts/partials/katalog.html ersetzt:
 #    "{website}"           -> Basis-URL der Seite
 #    "{angebot_ids}"       -> alle Angebots-ids aus data/ulf.yaml (als Liste, im enum)
-#    "{anfrage_ids}"       -> buchbare Angebots-ids + noch_offen (ohne Aufpreis-Eintrag)
+#    "{anfrage_ids}"       -> buchbare Angebots-ids + noch_offen
 #  `quelle` = Schluessel im Katalog, den das Lesewerkzeug zurueckgibt (JS: anfrage.js, Abschnitt WebMCP).
 #  `nur_wenn` = Werkzeug wird nur angemeldet, wenn dieser Katalog-Schluessel nicht leer ist.
 # ==================================================================================================
@@ -22,8 +22,8 @@ werkzeuge:
     description: >-
       Listet alle Privatstunden-Angebote von Ulf Seidl, staatlich gepruefter Skilehrer in Flachau (Snow Space Salzburg),
       genau wie auf ersteschischule.at. Liefert je Angebot: id, Name (de, en, nl), Dauer, Preis in
-      Euro als Zahl (preis_eur) und als Text, Kurzbeschreibung und ob es ein Aufpreis je weiterer Person ist
-      (aufpreis_je_person). Dazu Waehrung, Hoechstzahl Personen sowie Saison und Treffpunkt laut Seite. Nur lesen.
+      Euro als Zahl (preis_eur) und als Text, Kurzbeschreibung und den Aufpreis je weiterer Person in Euro
+      (aufpreis_je_weitere_person_eur). Dazu Waehrung, Hoechstzahl Personen sowie Saison und Treffpunkt laut Seite. Nur lesen.
     inputSchema: { type: "object", properties: {}, additionalProperties: false }
     annotations: { readOnlyHint: true }
 
@@ -31,9 +31,9 @@ werkzeuge:
     title: "Ein Angebot im Detail"
     quelle: "angebot"
     description: >-
-      Liefert ein einzelnes Angebot von Ulf Seidl anhand der id aus list_angebote (schnupperstunde, halbtag_privat,
-      ganztag_privat oder weitere_person): Name, Dauer, Preis in Euro, Beschreibung, den Aufpreis je weiterer Person,
-      die Hoechstzahl Personen, Saison und Treffpunkt sowie nextSteps zur Anfrage. Gibt bei unbekannter id
+      Liefert ein einzelnes Angebot von Ulf Seidl anhand der id aus list_angebote (zwei_stunden, drei_stunden
+      oder vier_stunden): Name, Dauer, Preis in Euro, Beschreibung, den Aufpreis je weiterer Person,
+      den Fruehbucherrabatt, die Hoechstzahl Personen, Saison und Treffpunkt sowie nextSteps zur Anfrage. Gibt bei unbekannter id
       einen Fehler mit der Liste gueltiger ids zurueck. Nur lesen.
     inputSchema:
       type: "object"
@@ -47,8 +47,8 @@ werkzeuge:
     title: "Preise und Bedingungen"
     quelle: "preise_und_bedingungen"
     description: >-
-      Liefert die Preisliste von Ulf Seidl in Euro (Schnupperstunde, Halbtag, Ganztag, Aufpreis je weiterer Person bis
-      4 Personen) und die Regeln zum Ablauf als woertliche Saetze von ersteschischule.at: Anfrage, Treffpunkt nach
+      Liefert die Preisliste von Ulf Seidl in Euro (2, 3 und 4 Stunden, je Angebot der Aufpreis je weiterer Person bis
+      4 Personen, Fruehbucherrabatt) und die Regeln zum Ablauf als woertliche Saetze von ersteschischule.at: Anfrage, Treffpunkt nach
       Vereinbarung, Familie oder Freunde bis 4 Personen. Gibt ausserdem unter offen_bei_ulf die Themen zurueck, zu denen die
       Website nichts sagt (z. B. Storno, Zahlung, Liftkarte) - diese bitte direkt bei Ulf erfragen, nicht annehmen.
     inputSchema: { type: "object", properties: {}, additionalProperties: false }
@@ -178,7 +178,7 @@ werkzeuge:
         email: { type: "string", maxLength: 160, description: "E-Mail-Adresse fuer die Antwort und die Bestaetigung. E-Mail oder telefon, mindestens eines." }
         telefon: { type: "string", maxLength: 40, description: "Telefon- oder WhatsApp-Nummer, nur Ziffern, Leerzeichen und + ( ) / -, mindestens 6 Ziffern. E-Mail oder telefon, mindestens eines." }
         wunschtermin: { type: "string", minLength: 2, maxLength: 120, description: "Wunschtermin oder Zeitraum in eigenen Worten, z. B. \"14.-16. Februar 2027, vormittags\"." }
-        angebot: { type: "string", enum: "{anfrage_ids}", description: "Gewuenschtes Angebot: schnupperstunde (55 min), halbtag_privat (3 h), ganztag_privat (bis 6 h) oder noch_offen." }
+        angebot: { type: "string", enum: "{anfrage_ids}", description: "Gewuenschtes Angebot: zwei_stunden (9 bis 11 Uhr), drei_stunden (9 bis 12 Uhr), vier_stunden (9 bis 14 Uhr) oder noch_offen." }
         personen: { type: "integer", minimum: 1, maximum: 4, description: "Anzahl der Personen, 1 bis 4 (jede weitere Person mit Aufpreis)." }
         niveau: { type: "string", enum: ["anfaenger", "fortgeschritten", "koenner"], description: "Koennen: anfaenger, fortgeschritten oder koenner." }
         nachricht: { type: "string", maxLength: 4000, description: "Optional: Alter der Kinder, Wuensche, Fragen. Nichts erfinden." }

@@ -56,9 +56,9 @@
       <label for="af-angebot">{{ i18n "f_angebot" }}</label>
       <select id="af-angebot" name="angebot" required aria-describedby="af-angebot-fehler">
         <option value="">{{ i18n "f_bitte_waehlen" }}</option>
-        {{- range hugo.Data.ulf.angebote }}{{ if not .zuschlag }}
+        {{- range hugo.Data.ulf.angebote }}
         <option value="{{ .wert }}" data-id="{{ .id }}">{{ index .name site.Language.Lang }} · {{ partial "preis.html" . }}</option>
-        {{- end }}{{ end }}
+        {{- end }}
         <option value="Noch offen" data-id="noch_offen">{{ i18n "f_angebot_offen" }}</option>
       </select>
       <p class="af-fehler" id="af-angebot-fehler" hidden></p>
@@ -69,8 +69,8 @@
       <select id="af-personen" name="personen" required aria-describedby="af-personen-hinweis af-personen-fehler">
         {{- range seq hugo.Data.ulf.personen_max }}<option value="{{ . }}">{{ . }}</option>{{ end }}
       </select>
-      {{- $zuschlag := index (where hugo.Data.ulf.angebote "zuschlag" true) 0 }}
-      <p class="af-hinweis" id="af-personen-hinweis">{{ i18n "f_personen_hinweis" (dict "preis" $zuschlag.preis_eur "max" hugo.Data.ulf.personen_max) }}</p>
+      {{- $aufpreise := slice }}{{ range hugo.Data.ulf.angebote }}{{ $aufpreise = $aufpreise | append (printf "%s + € %d" (index .name site.Language.Lang) .aufpreis_eur) }}{{ end }}
+      <p class="af-hinweis" id="af-personen-hinweis">{{ i18n "f_personen_hinweis" (dict "aufpreise" (delimit $aufpreise " · ") "max" hugo.Data.ulf.personen_max) }}</p>
       <p class="af-fehler" id="af-personen-fehler" hidden></p>
     </div>
     <div class="af-feld">

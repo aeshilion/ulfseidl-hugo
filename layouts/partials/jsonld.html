@@ -10,12 +10,11 @@
 {{- $preise := slice -}}
 {{- range $d.angebote -}}
   {{- $o := dict "@type" "Offer" "name" (index .name $L) "description" (index .text $L) "price" .preis_eur "priceCurrency" $d.waehrung "url" (printf "%s#angebote" $.Permalink) -}}
-  {{- if .zuschlag -}}
-    {{- $o = merge $o (dict "priceSpecification" (dict "@type" "UnitPriceSpecification" "price" .preis_eur "priceCurrency" $d.waehrung "referenceQuantity" (dict "@type" "QuantitativeValue" "value" 1 "unitText" (index .dauer $L)))) -}}
-  {{- else -}}
-    {{- $o = merge $o (dict "itemOffered" (dict "@type" "Service" "name" (index .name $L) "provider" (dict "@id" (printf "%s#betrieb" $web)))) -}}
-    {{- $preise = $preise | append .preis_eur -}}
-  {{- end -}}
+  {{- $o = merge $o (dict "itemOffered" (dict "@type" "Service" "name" (index .name $L) "provider" (dict "@id" (printf "%s#betrieb" $web)))) -}}
+  {{- $o = merge $o (dict "priceSpecification" (slice
+        (dict "@type" "UnitPriceSpecification" "price" .preis_eur "priceCurrency" $d.waehrung)
+        (dict "@type" "UnitPriceSpecification" "price" .aufpreis_eur "priceCurrency" $d.waehrung "name" (i18n "k_aufpreis" (dict "preis" .aufpreis_eur))))) -}}
+  {{- $preise = $preise | append .preis_eur -}}
   {{- $angebote = $angebote | append $o -}}
 {{- end -}}
 {{- $ld := dict

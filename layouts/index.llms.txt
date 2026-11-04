@@ -10,10 +10,12 @@ Website: {{ $web }} (DE, EN, NL). Maschinenlesbarer Katalog: {{ $web }}webmcp.js
 
 ## Angebote und Preise ({{ $K.angebote.waehrung }})
 {{ range $K.angebote.angebote }}
-- {{ .name }}: {{ .dauer }}, {{ .preis_text }} – {{ .beschreibung }}
+- {{ .name }}: {{ .dauer }}, {{ .preis_text }}, {{ .aufpreis_text }} – {{ .beschreibung }}
 {{- end }}
 
-Bis {{ $K.angebote.personen_max }} Personen; jede weitere Person auf ähnlichem Niveau + € {{ $K.preise_und_bedingungen.aufpreis_je_weitere_person_eur }}.
+Bis {{ $K.angebote.personen_max }} Personen auf ähnlichem Niveau; Aufpreis je weiterer Person siehe Angebot.
+
+{{ $K.preise_und_bedingungen.fruehbucher.text }}
 
 ## Saison und Treffpunkt
 
