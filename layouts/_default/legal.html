@@ -17,15 +17,15 @@
 <body>
 <div class="topbar"><a href="tel:{{ .Site.Params.phone | urlize }}">⛷ {{ if eq .Site.Language.Lang "nl" }}Boek nu uw privéles: {{ else if eq .Site.Language.Lang "en" }}Book your private lesson: {{ else }}Jetzt Privatstunde sichern: {{ end }}{{ .Site.Params.phone }}</a></div>
 <div class="sitewrap">
-  <a class="logotile" href="{{ .Site.Home.RelPermalink }}" aria-label="Startseite"><div class="l1">Ulf Seidl</div><div class="l2">Flachau</div></a>
+  <a class="logotile" href="{{ .Site.Home.RelPermalink }}"><div class="l1">Ulf Seidl</div><div class="l2">Flachau</div></a>
   <nav class="mainnav"><div class="inner"><div class="navlinks">
     <a href="{{ .Site.Home.RelPermalink }}">{{ if eq .Site.Language.Lang "de" }}Startseite{{ else if eq .Site.Language.Lang "nl" }}Home{{ else }}Home{{ end }}</a>
   </div></div></nav>
-  <div class="legal">
+  <main class="legal">
     <h1>{{ .Title }}</h1>
     {{ .Content }}
     <a class="back btn" href="{{ .Site.Home.RelPermalink }}">← {{ if eq .Site.Language.Lang "de" }}Zurück zur Startseite{{ else if eq .Site.Language.Lang "nl" }}Terug naar de startpagina{{ else }}Back to home{{ end }}</a>
-  </div>
+  </main>
   <footer>
     <span>© {{ now.Year }} Ulf Seidl · Flachau</span>
     <span>{{ .Site.Params.phone }} · {{ .Site.Params.email }}</span>

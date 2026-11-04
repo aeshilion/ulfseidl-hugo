@@ -33,7 +33,7 @@
     {{ if eq .Site.Language.Lang "nl" }}<span>NL</span>{{ else }}<a href="/nl/">NL</a>{{ end }}
     {{ if eq .Site.Language.Lang "de" }}<span>DE</span>{{ else }}<a href="/">DE</a>{{ end }}
   </div>
-  <a class="logotile" href="{{ .Site.Home.RelPermalink }}" aria-label="Startseite">
+  <a class="logotile" href="{{ .Site.Home.RelPermalink }}">
     <div class="l1">Ulf Seidl</div>
     <div class="l2">Flachau</div>
   </a>
@@ -45,7 +45,7 @@
     </div>
   </div></nav>
 
-  <div class="content">
+  <main class="content">
     <section class="introsec">
       <h1>{{ .Params.hero_title_light }} <span class="accent">{{ .Params.hero_title_accent }}</span></h1>
       <div class="intro">
@@ -86,7 +86,7 @@
 
     <section class="why" id="warum">
       <div class="about">
-        <div class="portrait"><img src="/images/ulf-portrait.jpg" width="704" height="717" alt="Ulf Seidl" loading="lazy" decoding="async">{{/* Datei ist schon WebP (trotz .jpg), Hugo kann sie nicht verarbeiten */}}</div>
+        <div class="portrait">{{ partial "bild.html" (dict "src" "images/ulf-portrait.webp" "alt" "Ulf Seidl" "breite" 360 "lazy" true) }}</div>
         <div><h2>{{ .Params.why_title_light }} <span class="accent">{{ .Params.why_title_accent }}</span></h2></div>
       </div>
       <ul>{{ range .Params.why }}<li>{{ . }}</li>{{ end }}</ul>
@@ -124,7 +124,7 @@
       <a class="btn" href="{{ .link }}">{{ .cta }}</a>
     </div>
     {{ end }}
-  </div>
+  </main>
 
   <footer>
     <span>© {{ now.Year }} Ulf Seidl · Flachau</span>
