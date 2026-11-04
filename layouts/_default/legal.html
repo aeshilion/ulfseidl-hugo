@@ -5,10 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 {{ with .Description }}<meta name="description" content="{{ . }}">{{ end }}
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css?family=Oxygen:300,400,700&display=swap" rel="stylesheet">
+<link rel="preload" href="/fonts/oxygen-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/oxygen-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
 <title>{{ .Title }} — Ulf Seidl</title>
 <link rel="icon" href="/favicon.ico" sizes="any"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+{{ partial "hintergrund.html" . }}
 {{ $css := resources.Get "css/main.css" | minify }}<style>{{ $css.Content | safeCSS }}</style>
 {{ $ld := dict "@context" "https://schema.org" "@type" "WebPage" "name" .Title "description" .Description "url" .Permalink "inLanguage" .Site.Language.Lang "isPartOf" (dict "@type" "WebSite" "name" .Site.Title "url" .Site.Home.Permalink) "publisher" (dict "@type" "Person" "name" "Ulf Seidl") }}
 <script type="application/ld+json">{{ $ld | jsonify | safeJS }}</script>

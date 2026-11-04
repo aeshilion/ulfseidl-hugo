@@ -3,15 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css?family=Oxygen:300,400,700&display=swap" rel="stylesheet">
+<link rel="preload" href="/fonts/oxygen-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/oxygen-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
 <title>{{ .Title }}</title>
 <meta name="description" content="{{ .Params.description }}">
-{{ range .Translations }}<link rel="alternate" hreflang="{{ .Site.Language.Lang }}" href="{{ .Permalink }}">{{ end }}
+{{ range .AllTranslations }}<link rel="alternate" hreflang="{{ .Site.Language.Lang }}" href="{{ .Permalink }}">{{ end }}
+{{ with site.Home.AllTranslations }}{{ range first 1 (where . "Language.Lang" "de") }}<link rel="alternate" hreflang="x-default" href="{{ .Permalink }}">{{ end }}{{ end }}
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="canonical" href="{{ .Permalink }}">
+{{ partial "hintergrund.html" . }}
 <meta property="og:type" content="website">
 <meta property="og:title" content="{{ .Title }}">
 <meta property="og:description" content="{{ .Params.description }}">
@@ -47,7 +49,7 @@
     <section class="introsec">
       <h1>{{ .Params.hero_title_light }} <span class="accent">{{ .Params.hero_title_accent }}</span></h1>
       <div class="intro">
-        <div class="photo"><img src="/images/ulf-action.jpg" alt="Privater Skiunterricht in Flachau"></div>
+        <div class="photo">{{ partial "bild.html" (dict "src" "images/ulf-action.jpg" "alt" "Privater Skiunterricht in Flachau" "breite" 900 "prio" true) }}</div>
         <div>
           <p class="sub">{{ .Params.hero_sub }}</p>
           <p>{{ .Params.about_text }}</p>
@@ -84,7 +86,7 @@
 
     <section class="why" id="warum">
       <div class="about">
-        <div class="portrait"><img src="/images/ulf-portrait.jpg" alt="Ulf Seidl"></div>
+        <div class="portrait"><img src="/images/ulf-portrait.jpg" width="704" height="717" alt="Ulf Seidl" loading="lazy" decoding="async">{{/* Datei ist schon WebP (trotz .jpg), Hugo kann sie nicht verarbeiten */}}</div>
         <div><h2>{{ .Params.why_title_light }} <span class="accent">{{ .Params.why_title_accent }}</span></h2></div>
       </div>
       <ul>{{ range .Params.why }}<li>{{ . }}</li>{{ end }}</ul>
@@ -94,7 +96,7 @@
       <h2>{{ .Params.gallery_title_light }} <span class="accent">{{ .Params.gallery_title_accent }}</span></h2>
       <div class="galgrid">
         {{ range .Params.gallery }}
-        <figure><img src="{{ .img }}" alt="{{ .caption }}" loading="lazy"><figcaption>{{ .caption }}</figcaption></figure>
+        <figure>{{ partial "bild.html" (dict "src" (strings.TrimPrefix "/" .img) "alt" .caption "breite" 700 "lazy" true) }}<figcaption>{{ .caption }}</figcaption></figure>
         {{ end }}
       </div>
     </section>

@@ -1,0 +1,3 @@
+{{- /* Seitenhintergrund als WebP; main.css behält das JPG als Rückfall. Muss NACH main.css greifen: eigene Regel mit höherer Spezifität. */ -}}
+{{- $bg := (resources.Get "images/bg.jpg").Process "resize 1600x webp q70" -}}
+<style>html body{background-image:url({{ $bg.RelPermalink }})}</style>

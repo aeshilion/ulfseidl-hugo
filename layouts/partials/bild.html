@@ -1,0 +1,6 @@
+{{- /* WebP mit festen Maßen (kein Layoutsprung). Eingabe: dict "src" "images/x.jpg" "alt" … "breite" 900 "lazy" true "prio" false */ -}}
+{{- $o := resources.Get .src -}}
+{{- $b := $o.Width -}}{{- with .breite }}{{ if lt . $b }}{{ $b = . }}{{ end }}{{ end -}}
+{{- $w := $o.Process (printf "resize %dx webp q78" $b) -}}
+<img src="{{ $w.RelPermalink }}" width="{{ $w.Width }}" height="{{ $w.Height }}" alt="{{ .alt }}"{{ if .lazy }} loading="lazy" decoding="async"{{ end }}{{ if .prio }} fetchpriority="high"{{ end }}>
+{{- /**/ -}}

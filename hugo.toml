@@ -65,3 +65,16 @@ disableKinds = ["taxonomy", "term"]
   #      zeigt „WebMCP“ als Valid; `typeof document.modelContext` = "object".
   #   Der Token ist öffentlich (steht im HTML), kein Geheimnis. Ablauf 17.11.2026 im Kalender halten.
   webmcpOriginTrial = ""
+
+# Bilder aus static/images auch als Hugo-Ressource (WebP + Maße über layouts/partials/bild.html);
+# die JPG-Originale bleiben unter /images/ erreichbar (og:image, JSON-LD).
+[module]
+  [[module.mounts]]
+    source = "assets"
+    target = "assets"
+  [[module.mounts]]
+    source = "static/images"
+    target = "assets/images"
+  [[module.mounts]]
+    source = "static"
+    target = "static"
