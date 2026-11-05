@@ -1,0 +1,36 @@
+# Prüft jeden Vorschlag (Pull Request) und jeden Stand auf main, bevor Ulf mergt:
+# Seite baut, Formular (Felder, Turnstile, Datenschutz) und Angebote/Preise/WebMCP stimmen überein.
+# Grüner Haken = darf gemergt werden. Rot = nicht mergen, Claude oder Emanuel schauen.
+name: Seite prüfen
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pruefen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: '0.159.1'
+          extended: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: jsdom für die Laufzeit-Proben
+        run: npm install --prefix "$RUNNER_TEMP/js" --no-save --no-audit --no-fund jsdom@28.1.0
+      - name: Seite bauen
+        run: hugo --gc --minify
+      - name: Formular-Probe
+        env:
+          JSDOM_NODE_PATH: ${{ runner.temp }}/js/node_modules
+        run: python3 tests/formular-probe.py
+      - name: WebMCP-Probe
+        env:
+          JSDOM_NODE_PATH: ${{ runner.temp }}/js/node_modules
+        run: python3 tests/webmcp-probe.py

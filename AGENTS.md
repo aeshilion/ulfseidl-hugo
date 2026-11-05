@@ -27,6 +27,8 @@ Fachwörter. Erst zeigen, was sich ändert, dann ändern.
 2.7 **Prüfen vor dem Vorschlag:** `hugo --gc --minify` muss ohne Fehler durchlaufen, dann
     `python3 tests/webmcp-probe.py` und `python3 tests/formular-probe.py`. Fehlt ein Werkzeug dafür,
     sag das ehrlich, statt grün zu melden. Proben nie abschwächen, damit sie grün werden.
+    Auf GitHub laufen dieselben Proben bei jedem Pull Request („Seite prüfen“); erst bei grünem
+    Haken sagst du Ulf, dass er mergen kann.
 2.8 **Immer als Pull Request**, nie direkt auf `main`. Ulf schaut ihn an und klickt auf Merge; danach ist
     die Seite in etwa 2 Minuten live.
 2.9 Rückgängig nur mit `git revert` (bei Merges `-m 1`), nie `reset` oder Force-Push.
