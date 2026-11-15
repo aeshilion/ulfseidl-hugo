@@ -49,7 +49,11 @@ disableKinds = ["taxonomy", "term"]
   # Turnstile-Widget „ersteschischule.at“ (öffentlicher Sitekey, kein Geheimnis; das Secret liegt
   # nur am Server als TURNSTILE_SECRET in /etc/ulf-contact-api.env).
   turnstileSitekey = "0x4AAAAAAFK-jnpQcDpDW-Re"
-  # WebMCP-Origin-Trial-Token für https://ersteschischule.at (Chrome 149–156, Trial endet 17.11.2026).
+  # WebMCP-Origin-Trial-Token für https://ersteschischule.at (Chrome 149+). Jeder Token hat ein eigenes
+  # Ablaufdatum, es steht im Token selbst; vor Ablauf einen neuen holen.
+  # Wert: ein Token als Text ODER mehrere als Liste (alter + neuer nebeneinander, je eine
+  # <meta http-equiv="origin-trial">-Zeile; leere Einträge werden übersprungen), z. B.
+  #   webmcpOriginTrial = ["ALTER_TOKEN", "NEUER_TOKEN"]
   # Leer = kein Meta-Tag; ohne Token sehen nur Browser mit eingeschaltetem WebMCP die Werkzeuge
   # (für Besucher sind sie dann UNSICHTBAR — Taxi Alpin hatte genau das, Messung 27.09.2026).
   # >>> TOKEN HOLEN (Emanuel, Google-Konto wie bei den anderen Kundenseiten):
@@ -63,7 +67,7 @@ disableKinds = ["taxonomy", "term"]
   #      <meta http-equiv="origin-trial" content="…"> in den Kopf jeder Startseite.
   #   4. Prüfen nach dem Live-Gang in Google Chrome ≥ 149: DevTools → Application → Frames → Origin Trials
   #      zeigt „WebMCP“ als Valid; `typeof document.modelContext` = "object".
-  #   Der Token ist öffentlich (steht im HTML), kein Geheimnis. Ablauf 17.11.2026 im Kalender halten.
+  #   Der Token ist öffentlich (steht im HTML), kein Geheimnis. Ablaufdatum des Tokens im Kalender halten.
   webmcpOriginTrial = ""
 
 # Bilder aus static/images auch als Hugo-Ressource (WebP + Maße über layouts/partials/bild.html);

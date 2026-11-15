@@ -56,9 +56,10 @@ def yaml_laden(p):
 
 def bauen(ziel, **params):
     env = dict(os.environ)
+    config = params.pop("config", None)
     for k, v in params.items():
         env["HUGO_PARAMS_" + k.upper()] = v
-    r = subprocess.run(["hugo", "--minify", "-d", str(ziel)], cwd=REPO, env=env, capture_output=True, text=True)
+    r = subprocess.run(["hugo", "--minify", "-d", str(ziel)] + (["--config", config] if config else []), cwd=REPO, env=env, capture_output=True, text=True)
     if r.returncode != 0 or re.search(r"\b(WARN|ERROR)\b", r.stdout + r.stderr):
         print(r.stdout + r.stderr)
         sys.exit("✕ hugo --minify nicht sauber (Fehler oder Warnung)")
@@ -421,6 +422,16 @@ def origin_trial(b_leer, b_token, token, fehler):
         pruef(len(m) == 1 and htmlmod.unescape(m[0]) == token, f"{s}: Origin-Trial-Meta {m!r} ≠ roher Token")
 
 
+def origin_trial_liste(t):
+    """Liste als Konfigurationsüberlagerung (liegt in $TMPDIR, nicht im Repo): 2 Tokens + 1 leerer ergeben genau 2 Meta-Zeilen."""
+    t = pathlib.Path(t)
+    ueber = t / "ot-liste.toml"
+    ueber.write_text('[params]\n  webmcpOriginTrial = ["TOKEN-ALT-abc123", "", "TOKEN-NEU-def456"]\n')
+    bauen(t / "otl", config=f"hugo.toml,{ueber}")
+    h = (t / "otl" / "index.html").read_text()
+    return re.findall(r'<meta http-equiv=origin-trial content="?([^">]+)"?>', h)
+
+
 def jsdom_pfad():
     if os.environ.get("JSDOM_NODE_PATH"):
         return os.environ["JSDOM_NODE_PATH"]
@@ -547,6 +558,9 @@ def main():
             fehler = []
             statisch(b, daten, fehler)
             origin_trial(b, b_ot, token, fehler)
+            m = origin_trial_liste(t)
+            if m != ["TOKEN-ALT-abc123", "TOKEN-NEU-def456"]:
+                fehler.append(f"Origin-Trial-Liste (2 Tokens + 1 leerer) ergibt Meta-Zeilen {m!r}, erwartet genau die 2 Tokens")
             laufzeit(t / "js", daten, fehler, messung_ziel=t / "messung.json")
             if fehler:
                 print("✕ WebMCP-Probe ROT:"); print("\n".join("  - " + x for x in fehler)); return 1

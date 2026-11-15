@@ -21,7 +21,7 @@
 <meta property="og:url" content="{{ .Permalink }}">
 <meta name="twitter:card" content="summary_large_image">
 {{ partial "jsonld.html" . }}
-{{ with site.Params.webmcpOriginTrial }}<meta http-equiv="origin-trial" content="{{ . }}">{{ end }}
+{{ $ot := site.Params.webmcpOriginTrial }}{{ if not (reflect.IsSlice $ot) }}{{ $ot = slice $ot }}{{ end }}{{ range $ot }}{{ with . }}<meta http-equiv="origin-trial" content="{{ . }}">{{ end }}{{ end }}
 {{ $css := resources.Get "css/main.css" | minify }}<style>{{ $css.Content | safeCSS }}</style>
 </head>
 <body>
