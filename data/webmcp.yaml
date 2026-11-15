@@ -117,14 +117,16 @@ werkzeuge:
     inputSchema: { type: "object", properties: {}, additionalProperties: false }
     annotations: { readOnlyHint: true }
 
-  - name: "list_qualifikationen"
-    title: "Qualifikation und Erfahrung"
+  - name: "list_nachweise"
+    title: "Nachweise: Qualifikation und Erfahrung (Selbstauskunft)"
     quelle: "qualifikationen"
     description: >-
-      Liefert Fachkunde und Erfahrung von Ulf Seidl als woertliche Saetze der Seite, je Eintrag id, bezeichnung und
-      nachweis: staatlich gepruefter Skilehrer, seit ueber drei Jahrzehnten auf den Pisten von Flachau, eine der grossen
-      Skischulen des Ortes aufgebaut und gefuehrt, Unterrichtssprachen, Zielgruppen und Koennen. nachweis sagt, ob ein Eintrag nur als Selbstauskunft auf der
-      Website steht oder mit Aussteller, Jahr und Pruef-URL belegt ist. Nur lesen.
+      Liefert die Nachweise zu Fachkunde und Erfahrung von Ulf Seidl als woertliche Saetze der Seite: staatlich
+      gepruefter Skilehrer, seit ueber drei Jahrzehnten auf den Pisten von Flachau, eine der grossen Skischulen des
+      Ortes aufgebaut und gefuehrt, Unterrichtssprachen, Zielgruppen und Koennen. Je Eintrag kommen id, bezeichnung,
+      nachweis, beleg_art, unabhaengig_pruefbar und beleg_url zurueck. Jeder Eintrag ist eine Selbstauskunft von der Website und
+      nicht unabhaengig pruefbar: beleg_art ist "selbstauskunft", unabhaengig_pruefbar ist false, beleg_url ist die Seite, auf
+      der der Satz woertlich steht. Nur lesen.
     inputSchema: { type: "object", properties: {}, additionalProperties: false }
     annotations: { readOnlyHint: true }
 

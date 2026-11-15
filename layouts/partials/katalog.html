@@ -68,7 +68,11 @@
   {{- with .aussteller }}{{ $q = merge $q (dict "aussteller" .) }}{{ $belegt = true }}{{ end -}}
   {{- with .jahr }}{{ $q = merge $q (dict "jahr" .) }}{{ end -}}
   {{- with .nachweis_url }}{{ $q = merge $q (dict "pruef_url" .) }}{{ $belegt = true }}{{ end -}}
-  {{- $q = merge $q (dict "nachweis" (cond $belegt "belegt (Aussteller/Pruef-URL)" "Selbstauskunft auf ersteschischule.at")) -}}
+  {{- $pruefbar := ne (.nachweis_url | default "") "" -}}
+  {{- $q = merge $q (dict "nachweis" (cond $belegt "belegt (Aussteller/Pruef-URL)" "Selbstauskunft auf ersteschischule.at")
+                          "beleg_art" (cond $pruefbar "nachweis_mit_pruef_url" "selbstauskunft")
+                          "unabhaengig_pruefbar" $pruefbar
+                          "beleg_url" $web) -}}
   {{- $quals = $quals | append $q -}}
 {{- end -}}
 

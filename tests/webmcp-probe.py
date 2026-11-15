@@ -34,7 +34,7 @@ import glob, html as htmlmod, json, os, pathlib, re, shutil, subprocess, sys, te
 REPO = pathlib.Path(__file__).resolve().parent.parent
 SPRACHEN = {"de": "", "en": "en/", "nl": "nl/"}
 LESEN = ["list_angebote", "get_angebot", "get_preise_und_bedingungen", "list_faqs", "suche_website",
-         "get_treffpunkt_und_anfahrt", "get_saison", "get_kontakt", "list_qualifikationen", "get_impressum",
+         "get_treffpunkt_und_anfahrt", "get_saison", "get_kontakt", "list_nachweise", "get_impressum",
          "get_datenschutz"]
 SCHREIBEN = ["privatstunde_anfragen"]
 RUECKGABE = re.compile(r"\b(liefert|listet|gibt .{0,80}zurueck|zurueck)\b", re.I)
@@ -198,6 +198,18 @@ def statisch(b, daten, fehler):
         pruef("TODO" not in x, "„TODO“ in Katalog, webmcp.json oder llms.txt")
     pruef(not any(v == "" for v in blaetter(K)), "leerer Wert im Katalog (leere TODO-Felder sollen wegfallen)")
 
+    # Nachweis-Werkzeug: Name, ehrliche Beschreibung, maschinenlesbare Beleg-Felder (Selbstauskunft, Seite des Satzes)
+    namen_de = [w["name"] for w in kat_de["werkzeuge"]]
+    pruef("list_qualifikationen" not in namen_de and "list_nachweise" in namen_de, "Nachweis-Werkzeug heisst nicht list_nachweise (oder alter Name noch da)")
+    nw = next((w for w in kat_de["werkzeuge"] if w["name"] == "list_nachweise"), {})
+    for wort in ("Selbstauskunft", "nachweis", "beleg_art", "unabhaengig_pruefbar", "beleg_url"):
+        pruef(wort in (nw.get("description") or ""), f"list_nachweise: Beschreibung nennt {wort!r} nicht")
+    eintraege = K["qualifikationen"]["qualifikationen"]
+    pruef(len(eintraege) == len(daten["qualifikationen"]) > 0, "list_nachweise: Eintraege fehlen")
+    for q in eintraege:
+        pruef(q.get("beleg_art") == "selbstauskunft" and q.get("unabhaengig_pruefbar") is False, f"list_nachweise {q.get('id')}: beleg_art/unabhaengig_pruefbar ≠ selbstauskunft/false")
+        pruef(q.get("beleg_url") == json.loads(b["webmcp"])["katalog"]["anbieter"]["website"] and norm_ws(q["bezeichnung"]) in seitentext(b["home_de"]), f"list_nachweise {q.get('id')}: beleg_url nicht die Startseite mit dem Satz")
+
     # llms.txt
     L = b["llms"]
     for a in angebote:
@@ -250,7 +262,7 @@ def statisch(b, daten, fehler):
 
 # ── Aussagen und Belege ───────────────────────────────────────────────────────────────────────
 # Schlüssel, deren Werte keine Aussage über Ulf sind (Fragen, Hinweise über den Katalog, Kennungen, Adressen)
-FREI = {"frage", "meta_hinweis", "offen_hinweis", "offen_bei_ulf", "themen", "nachweis", "id", "formularwert",
+FREI = {"frage", "meta_hinweis", "offen_hinweis", "offen_bei_ulf", "themen", "nachweis", "beleg_art", "id", "formularwert",
         "waehrung", "sprachen_seite", "website", "email", "telefon", "telefon_link", "whatsapp", "anfrage_werkzeug",
         "anfrageformular", "impressum_url", "impressum_urls", "datenschutz_url", "datenschutz_urls", "pruef_url"}
 LD_FREI = {"@context", "@type", "@id", "url", "image", "email", "telephone", "priceCurrency", "addressCountry", "knowsLanguage"}
@@ -301,6 +313,8 @@ ERLAUBT = {
     "nichts", "selbst", "sind", "sonst", "unter", "vorher", "welcher", "ausserdem", "anhand", "gibt", "laut",
     "sagt", "steht", "stehen", "genau", "passt", "kurze", "leere", "einzelnes", "naechsten", "keinen",
     "echten", "mehrere", "sowie",
+    # Nachweis-Werkzeug sagt, wie belastbar ein Eintrag ist (Einschränkung, keine Tatsache über Ulf)
+    "unabhaengig", "pruefbar",
     # Was ein Werkzeug tut und zurückgibt (Alex' Maßstab: „sagt, was zurückkommt“)
     "liefert", "listet", "auflisten", "lesen", "werkzeug", "werkzeuge", "werkzeugs", "eintrag", "eintraege",
     "liste", "treffer", "titel", "bereich", "detail", "ergebnis", "kurzbeschreibung", "beschreibung", "zahl",
