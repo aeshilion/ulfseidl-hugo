@@ -552,12 +552,14 @@ def main():
         bauen(t / "prod")                                                              # wie CI
         bauen(t / "js", turnstileSitekey=" ", anfrageOhneTurnstile="true")             # jsdom: kein Turnstile-Netz
         bauen(t / "ot", webmcpOriginTrial=token)
-        b, b_ot = lesen(t / "prod"), lesen(t / "ot")
+        (t / "ot-leer.toml").write_text('[params]\n  webmcpOriginTrial = ""\n')         # leerer Token: kein Meta-Tag
+        bauen(t / "leer", config=f"hugo.toml,{t / 'ot-leer.toml'}")
+        b, b_ot, b_leer = lesen(t / "prod"), lesen(t / "ot"), lesen(t / "leer")
 
         if not selbst:
             fehler = []
             statisch(b, daten, fehler)
-            origin_trial(b, b_ot, token, fehler)
+            origin_trial(b_leer, b_ot, token, fehler)
             m = origin_trial_liste(t)
             if m != ["TOKEN-ALT-abc123", "TOKEN-NEU-def456"]:
                 fehler.append(f"Origin-Trial-Liste (2 Tokens + 1 leerer) ergibt Meta-Zeilen {m!r}, erwartet genau die 2 Tokens")
