@@ -68,7 +68,7 @@ disableKinds = ["taxonomy", "term"]
   #   4. Prüfen nach dem Live-Gang in Google Chrome ≥ 149: DevTools → Application → Frames → Origin Trials
   #      zeigt „WebMCP“ als Valid; `typeof document.modelContext` = "object".
   #   Der Token ist öffentlich (steht im HTML), kein Geheimnis. Ablaufdatum des Tokens im Kalender halten.
-  webmcpOriginTrial = ""
+  webmcpOriginTrial = ["AtARmgMzWnkQxdcd/6vo0uZRdCc6tV5b8c9yRo5qylobVYRIM+8yFu8GoQwxh+safKzmpG0Oh87T4CqsXb8A1wUAAABleyJvcmlnaW4iOiJodHRwczovL2Vyc3Rlc2NoaXNjaHVsZS5hdDo0NDMiLCJmZWF0dXJlIjoiV2ViTUNQIiwiZXhwaXJ5IjoxODA2MzY0ODAwLCJpc1N1YmRvbWFpbiI6dHJ1ZX0="]
 
 # Bilder aus static/images auch als Hugo-Ressource (WebP + Maße über layouts/partials/bild.html);
 # die JPG-Originale bleiben unter /images/ erreichbar (og:image, JSON-LD).
